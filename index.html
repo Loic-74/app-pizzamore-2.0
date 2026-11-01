@@ -1,0 +1,2326 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Pizz'Amore 2.0 — Caisse Messery</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Pizz'Amore 2.0">
+<meta name="theme-color" content="#b3261e">
+<style>
+  :root{
+    --rouge:#b3261e;
+    --rouge-fonce:#7a1a14;
+    --vert:#2f7d4f;
+    --creme:#fdf6ec;
+    --creme2:#f4ead7;
+    --encre:#2b2420;
+    --gris:#8a8178;
+    --ok:#2f7d4f;
+    --danger:#b3261e;
+    --radius:14px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none;}
+  html,body{height:100%; margin:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    background:var(--creme);
+    color:var(--encre);
+    overflow:hidden;
+  }
+  #app{display:flex; flex-direction:column; height:100vh; height:100dvh;}
+
+  header{
+    background:linear-gradient(135deg,var(--rouge),var(--rouge-fonce));
+    color:#fff;
+    padding:10px 16px;
+    display:flex; align-items:center; justify-content:space-between;
+    flex-wrap:wrap; gap:8px;
+    box-shadow:0 2px 8px rgba(0,0,0,.2);
+    flex:0 0 auto;
+  }
+  header h1{font-size:18px; margin:0; font-weight:700; letter-spacing:.3px;}
+  header .sub{font-size:11px; opacity:.85; margin-top:2px;}
+  .mode-toggle{display:flex; background:rgba(255,255,255,.18); border-radius:999px; padding:3px;}
+  .mode-toggle button{
+    border:none; background:transparent; color:#fff; padding:8px 16px; border-radius:999px;
+    font-size:13px; font-weight:600; cursor:pointer;
+  }
+  .mode-toggle button.active{background:#fff; color:var(--rouge-fonce);}
+  #admModeToggle button{color:var(--rouge-fonce); opacity:.55;}
+  #admModeToggle button.active{opacity:1;}
+  .adm-cat{border:1px solid #e9ddc9; border-radius:12px; padding:12px; margin-bottom:12px;}
+  .adm-cat-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;}
+  .adm-cat-head h4{margin:0; font-size:13.5px;}
+  .adm-item-row{display:grid; grid-template-columns:1fr 90px 1fr 30px; gap:6px; align-items:center; margin-bottom:6px; font-size:12.5px;}
+  .adm-item-row input{padding:6px 8px; border:1px solid #e9ddc9; border-radius:6px; font-size:12.5px; width:100%;}
+  .adm-del{color:var(--rouge); cursor:pointer; font-weight:900; text-align:center;}
+  .adm-supp-row{display:grid; grid-template-columns:1fr 90px 30px; gap:6px; align-items:center; font-size:12.5px;}
+  .adm-supp-row input{padding:6px 8px; border:1px solid #e9ddc9; border-radius:6px; font-size:12.5px; width:100%;}
+
+  nav.tabs{
+    display:flex; background:#fff; border-bottom:1px solid #e9ddc9; flex:0 0 auto;
+  }
+  nav.tabs button{
+    flex:1; padding:12px 4px; border:none; background:transparent; font-size:13px; font-weight:600;
+    color:var(--gris); border-bottom:3px solid transparent; cursor:pointer;
+  }
+  nav.tabs button.active{color:var(--rouge); border-bottom-color:var(--rouge);}
+
+  main{flex:1 1 auto; overflow:hidden; position:relative;}
+  .view{position:absolute; inset:0; display:none; overflow:hidden;}
+  .view.active{display:flex;}
+
+  /* ---- Commande ---- */
+  #view-commande{flex-direction:row;}
+  .menu-col{flex:1 1 auto; display:flex; flex-direction:column; min-width:0; border-right:1px solid #e9ddc9;}
+  .cats{display:flex; gap:6px; padding:10px; overflow-x:auto; flex:0 0 auto; background:#fff;}
+  .cats button{
+    flex:0 0 auto; padding:9px 14px; border-radius:999px; border:1.5px solid #e9ddc9; background:#fff;
+    font-size:13px; font-weight:600; color:var(--encre); cursor:pointer; white-space:nowrap;
+  }
+  .cats button.active{background:var(--rouge); color:#fff; border-color:var(--rouge);}
+  .cats button.special{border-color:var(--vert); color:var(--vert);}
+  .cats button.special.active{background:var(--vert); color:#fff; border-color:var(--vert);}
+
+  .items-wrap{flex:1 1 auto; overflow-y:auto; padding:10px;}
+  .items-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px;}
+  .item-btn{
+    background:#fff; border:1px solid #e9ddc9; border-radius:var(--radius); padding:12px 10px;
+    text-align:left; cursor:pointer; min-height:64px; display:flex; flex-direction:column; justify-content:space-between;
+    box-shadow:0 1px 2px rgba(0,0,0,.04);
+  }
+  .item-btn:active{transform:scale(.97); background:var(--creme2);}
+  .item-btn .nm{font-size:13.5px; font-weight:600; line-height:1.25;}
+  .item-btn .ds{font-size:10.5px; color:var(--gris); line-height:1.3; margin-top:3px;}
+  .item-btn .pr{font-size:13px; color:var(--rouge); font-weight:700; margin-top:6px;}
+  .item-btn.libre .pr{color:var(--vert);}
+  .tile-perso{position:absolute; top:6px; right:6px; width:22px; height:22px; border-radius:50%; border:1px solid #e9ddc9; background:#fff; color:var(--gris); font-weight:900; cursor:pointer; line-height:1;}
+  .item-btn{position:relative;}
+  .perso-chip{border:1.5px solid #e9ddc9; background:#fff; border-radius:999px; padding:6px 12px; font-size:12px; font-weight:600; cursor:pointer; color:var(--encre);}
+  .perso-chip.actif{background:var(--rouge); border-color:var(--rouge); color:#fff;}
+  .perso-chip b{margin-left:4px; font-weight:900; cursor:pointer;}
+  .perso-chip.ingr-on{border-color:var(--vert); background:#eafaf1; color:var(--vert);}
+  .perso-chip.ingr-off{border-color:var(--rouge); background:var(--rouge); color:#fff; text-decoration:line-through;}
+
+  .cart-col{width:320px; flex:0 0 320px; display:flex; flex-direction:column; background:#fff;}
+  .cart-head{padding:12px 14px 6px; flex:0 0 auto;}
+  .cart-head h2{font-size:15px; margin:0 0 2px;}
+  .cart-head .mode-lbl{font-size:12px; color:var(--gris);}
+  .cart-lines{flex:1 1 auto; overflow-y:auto; padding:0 10px;}
+  .cart-line{
+    border:1px solid #eee2cc; border-radius:10px; padding:8px 10px; margin-bottom:8px; cursor:pointer;
+  }
+  .cart-line.selected{border-color:var(--rouge); background:#fff6f3;}
+  .cart-line .row1{display:flex; justify-content:space-between; align-items:center; font-size:13.5px; font-weight:600;}
+  .cart-line .row1 .del{color:var(--gris); font-size:16px; padding:0 4px; cursor:pointer;}
+  .cart-line .row1 .perso{border:none; background:none; color:var(--gris); font-size:16px; font-weight:900; padding:0 4px; cursor:pointer;}
+  .line-chips{display:flex; gap:4px; flex-wrap:wrap; margin-top:6px;}
+  .line-chip{border:1px solid #e9ddc9; background:#fff; color:var(--gris); font-size:10px; font-weight:700; padding:3px 8px; border-radius:999px; cursor:pointer;}
+  .line-chip.actif{background:var(--rouge); border-color:var(--rouge); color:#fff;}
+  .cart-line .sup{font-size:12px; color:var(--gris); display:flex; justify-content:space-between; padding-left:8px; margin-top:3px;}
+  .cart-line .sup .del{cursor:pointer;}
+  .cart-empty{color:var(--gris); font-size:13px; text-align:center; margin-top:30px;}
+
+  .cart-totals{flex:0 0 auto; padding:10px 14px; border-top:1px solid #eee2cc;}
+  .cart-totals .ln{display:flex; justify-content:space-between; font-size:12.5px; color:var(--gris); margin-bottom:3px;}
+  .cart-totals .ttc{display:flex; justify-content:space-between; font-size:19px; font-weight:800; margin-top:4px;}
+  .cart-actions{display:flex; gap:8px; padding:10px 14px 14px;}
+  .cart-actions button{flex:1; padding:12px 6px; border-radius:10px; border:none; font-weight:700; font-size:13px; cursor:pointer;}
+  .btn-vider{background:#f1e9d8; color:var(--encre);}
+  .btn-cuisine{background:#2b2420; color:#fff;}
+  .btn-encaisser{background:var(--ok); color:#fff;}
+
+  .paiement-chips{display:flex; gap:8px; padding:0 14px 10px;}
+  .chip-paiement{flex:1; padding:10px 6px; border-radius:10px; border:1.5px solid #e9ddc9; background:#fff; color:var(--encre); font-weight:700; font-size:12.5px; cursor:pointer;}
+  .chip-paiement.active{border-color:var(--ok); background:#eafaf1; color:#1a7a4a;}
+  .chip-paiement.active[data-mode="carte"]{border-color:#2b4a7d; background:#eaf1fa; color:#1e3a5f;}
+
+  /* ---- Plan de salle ---- */
+  #view-salle{flex-direction:column;}
+  .salle-toolbar{display:flex; gap:8px; padding:10px; background:#fff; border-bottom:1px solid #e9ddc9; flex:0 0 auto;}
+  .salle-toolbar button{padding:10px 14px; border-radius:10px; border:1.5px solid var(--rouge); background:#fff; color:var(--rouge); font-weight:700; font-size:13px; cursor:pointer;}
+  .salle-toolbar button.reset{border-color:var(--gris); color:var(--gris); margin-left:auto;}
+  .salle-room{
+    flex:1; position:relative; margin:10px; border:2px dashed #d8c9a8; border-radius:16px;
+    background-image:linear-gradient(#efe4cc 1px,transparent 1px),linear-gradient(90deg,#efe4cc 1px,transparent 1px);
+    background-size:30px 30px; overflow:hidden;
+  }
+  .table-el{
+    position:absolute; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:#fff; border:2px solid var(--rouge-fonce); box-shadow:0 2px 6px rgba(0,0,0,.15);
+    font-size:12px; font-weight:700; color:var(--encre); cursor:grab; touch-action:none;
+  }
+  .table-el.ronde{border-radius:50%;}
+  .table-el.rect{border-radius:10px;}
+  .table-el.occupee{background:#fde9e4; border-color:var(--rouge);}
+  .table-el .tnum{font-size:13px;}
+  .table-el .tcov{font-size:10.5px; color:var(--gris); font-weight:600;}
+  .table-el .tstatut{font-size:9.5px; font-weight:800; margin-top:2px;}
+  .table-el.occupee .tstatut{color:var(--rouge);}
+  .table-el:not(.occupee) .tstatut{color:var(--vert);}
+  .table-el .tdel{
+    position:absolute; top:-9px; right:-9px; width:20px; height:20px; border-radius:50%;
+    background:var(--rouge); color:#fff; font-size:13px; line-height:20px; text-align:center; font-weight:700;
+  }
+  .table-el .tsplit{
+    position:absolute; top:-9px; left:-9px; width:20px; height:20px; border-radius:50%;
+    background:var(--encre); color:#fff; font-size:11px; line-height:20px; text-align:center; font-weight:700;
+  }
+  .table-el .tarrivee{
+    position:absolute; top:-24px; left:50%; transform:translateX(-50%); white-space:nowrap;
+    background:var(--rouge-fonce); color:#fff; font-size:10px; font-weight:800; padding:2px 7px;
+    border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,.2);
+  }
+
+  /* ---- Classement ---- */
+  #view-classement{flex-direction:column; overflow-y:auto; padding:16px; gap:16px;}
+  .classement-grid{display:flex; gap:16px; flex-wrap:wrap;}
+  .classement-card{flex:1 1 320px; background:#fff; border:1px solid #e9ddc9; border-radius:var(--radius); padding:14px;}
+  .classement-card h3{margin:0 0 10px; font-size:15px;}
+  .rank-row{display:flex; align-items:center; gap:10px; padding:7px 0; border-bottom:1px solid #f1e9d8; font-size:13.5px;}
+  .rank-row:last-child{border-bottom:none;}
+  .rank-row .pos{width:22px; height:22px; border-radius:50%; background:var(--creme2); color:var(--rouge-fonce); font-weight:800; font-size:12px; display:flex; align-items:center; justify-content:center; flex:0 0 auto;}
+  .rank-row .nom{flex:1;}
+  .rank-row .qte{font-weight:700; color:var(--vert);}
+  .classement-empty{color:var(--gris); font-size:13px; padding:10px 0;}
+  .btn-reset-class{margin-top:10px; background:none; border:1px solid var(--gris); color:var(--gris); padding:7px 12px; border-radius:8px; font-size:12px; cursor:pointer;}
+
+  /* ---- Réglages ---- */
+  #view-reglages{flex-direction:column; overflow-y:auto; padding:16px;}
+  .reg-card{background:#fff; border:1px solid #e9ddc9; border-radius:var(--radius); padding:16px; max-width:480px; margin-bottom:16px;}
+  .reg-card h3{margin:0 0 4px; font-size:15px;}
+  .reg-card .desc{font-size:12px; color:var(--gris); margin-bottom:12px;}
+  .field{margin-bottom:12px;}
+  .field label{display:block; font-size:12px; font-weight:700; color:var(--gris); margin-bottom:4px;}
+  .field input{width:100%; padding:10px 12px; border-radius:8px; border:1.5px solid #e9ddc9; font-size:14px;}
+  .field input:focus{outline:none; border-color:var(--rouge);}
+  .field.siret input{border-color:var(--vert); background:#f3fbf6;}
+  .btn-save{background:var(--rouge); color:#fff; border:none; padding:11px 18px; border-radius:10px; font-weight:700; cursor:pointer; font-size:13px;}
+  .tva-badge{display:inline-block; background:var(--creme2); color:var(--rouge-fonce); font-weight:800; padding:6px 12px; border-radius:8px; font-size:13px;}
+  .sync-note{font-size:12.5px; line-height:1.5; color:var(--encre); background:#fff8ec; border:1px dashed #e0c98a; border-radius:10px; padding:10px 12px;}
+
+  /* ---- File d'attente ---- */
+  .file-card{background:#fff; border:1px solid #e9ddc9; border-left:4px solid var(--vert); border-radius:10px; padding:12px 14px; cursor:pointer;}
+  .file-card.traitement{border-left-color:#c99b2e; opacity:.7;}
+  .file-card .fh{display:flex; justify-content:space-between; font-weight:700; font-size:13.5px; margin-bottom:4px;}
+  .file-card .fi{font-size:12.5px; color:var(--gris);}
+  .file-card .fs{font-size:11px; font-weight:700; color:var(--vert); margin-top:4px;}
+  .file-card.traitement .fs{color:#c99b2e;}
+  #fileBadge{background:#fff; color:var(--rouge); border-radius:999px; font-size:10px; padding:1px 6px; font-weight:800; margin-left:3px;}
+  #syncStatus.on{color:#9df0b0;}
+  #syncStatus.off{color:#ffcfc7;}
+  .table-pick{display:flex; justify-content:space-between; align-items:center; border:1.5px solid #e9ddc9; border-radius:10px; padding:10px 12px; cursor:pointer; font-size:13.5px; font-weight:600;}
+  .table-pick.occupee{border-color:var(--rouge); background:#fff6f3; opacity:.65; cursor:not-allowed;}
+  .table-pick .tpstatut{font-size:11px; font-weight:800;}
+  .table-pick:not(.occupee) .tpstatut{color:var(--vert);}
+  .table-pick.occupee .tpstatut{color:var(--rouge);}
+
+  /* ---- Modale générique ---- */
+  .overlay{position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; z-index:50;}
+  .overlay.show{display:flex;}
+  .modal{background:#fff; border-radius:16px; padding:20px; width:90%; max-width:340px;}
+  .modal h3{margin:0 0 12px; font-size:16px;}
+  .modal input{width:100%; padding:11px 12px; border:1.5px solid #e9ddc9; border-radius:8px; font-size:16px; margin-bottom:14px;}
+  .modal .mrow{display:flex; gap:8px;}
+  .modal .mrow button{flex:1; padding:11px; border-radius:9px; border:none; font-weight:700; cursor:pointer; font-size:13px;}
+  .modal .cancel{background:#f1e9d8; color:var(--encre);}
+  .modal .confirm{background:var(--rouge); color:#fff;}
+
+  .toast{
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--encre); color:#fff;
+    padding:10px 18px; border-radius:999px; font-size:13px; z-index:60; opacity:0; pointer-events:none; transition:opacity .25s;
+  }
+  .toast.show{opacity:1;}
+
+  #ticket-print{display:none;}
+  @media print{
+    body *{visibility:hidden;}
+    #ticket-print, #ticket-print *{visibility:visible;}
+    #ticket-print{display:block; position:absolute; top:0; left:0; width:280px; font-family:monospace; font-size:12px;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header>
+    <div>
+      <h1>🍕 Pizz'Amore 2.0</h1>
+      <div class="sub">Messery — Caisse</div>
+    </div>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <span id="syncStatus" style="font-size:11px; opacity:.9;">● hors-ligne</span>
+      <div class="mode-toggle" id="modeToggle">
+        <button data-mode="surPlace" class="active">Sur place</button>
+        <button data-mode="emporter">À emporter</button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button data-view="commande" class="active">Commande</button>
+    <button data-view="file">En cours <span id="fileBadge"></span></button>
+    <button data-view="salle">Plan de salle</button>
+    <button data-view="reservations">Réservations</button>
+    <button data-view="classement">Classement</button>
+    <button data-view="reglages">Réglages</button>
+  </nav>
+
+  <main>
+    <!-- COMMANDE -->
+    <section id="view-commande" class="view active">
+      <div class="menu-col">
+        <div class="cats" id="cats"></div>
+        <div class="items-wrap">
+          <div class="items-grid" id="itemsGrid"></div>
+        </div>
+      </div>
+      <div class="cart-col">
+        <div class="cart-head">
+          <h2>Commande en cours</h2>
+          <div class="mode-lbl" id="cartModeLbl">Sur place</div>
+          <button id="btnChoisirTable" style="display:none; margin-top:8px; width:100%; padding:9px; border-radius:8px; border:1.5px dashed var(--rouge); background:#fff6f3; color:var(--rouge-fonce); font-weight:700; font-size:12.5px; cursor:pointer;">🍽️ Choisir une table</button>
+          <button id="btnHeureRetrait" style="display:none; margin-top:8px; width:100%; padding:9px; border-radius:8px; border:1.5px dashed var(--rouge); background:#fff6f3; color:var(--rouge-fonce); font-weight:700; font-size:12.5px; cursor:pointer;">🕐 Heure de retrait</button>
+        </div>
+        <div class="cart-lines" id="cartLines"></div>
+        <div class="cart-totals">
+          <div class="ttc"><span>Total à payer</span><span id="totTTC">0,00 €</span></div>
+          <button id="btnDiviser" style="margin-top:8px; width:100%; padding:8px; border-radius:8px; border:1px dashed var(--gris); background:none; color:var(--gris); font-weight:700; font-size:12px; cursor:pointer;">➗ Diviser l'addition</button>
+        </div>
+        <div style="padding:0 14px 10px;">
+          <button class="chip-paiement" id="chipCouper" style="width:100%; display:block;">✂️ Commande à couper</button>
+        </div>
+        <div class="paiement-chips" id="paiementChips">
+          <button class="chip-paiement" data-mode="espece" id="chipEspece">💶 Paiement espèces</button>
+          <button class="chip-paiement" data-mode="carte" id="chipCarte">💳 Paiement carte</button>
+        </div>
+        <div class="cart-actions" style="flex-direction:column; gap:8px;">
+          <button class="btn-cuisine" id="btnValider" style="width:100%; padding:15px 6px; font-size:14.5px;">✅ Valider la commande</button>
+          <button class="btn-vider" id="btnVider" style="width:100%; padding:8px; font-size:12px; background:none; border:1px dashed var(--gris); color:var(--gris); font-weight:700; border-radius:8px; cursor:pointer;">Vider le panier</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- EN COURS (synchro, dissocié sur place / à emporter) -->
+    <section id="view-file" class="view" style="flex-direction:column; overflow-y:auto; padding:16px;">
+      <div class="sync-note" style="margin-bottom:14px;">
+        Les commandes envoyées depuis n'importe quel appareil (iPad ou iPhone des serveurs) apparaissent ici en direct. Clique sur une commande pour voir le détail, l'encaisser, ou ajouter des articles (entrées puis plats par exemple) sans faire attendre le client.
+      </div>
+      <div style="display:flex; gap:20px; flex-wrap:wrap;">
+        <div style="flex:1 1 380px; min-width:300px;">
+          <h3 style="font-size:14px; margin:0 0 10px;">🍽️ Sur place</h3>
+          <div id="fileListSurPlace" style="display:flex; flex-direction:column; gap:10px;"></div>
+        </div>
+        <div style="flex:1 1 380px; min-width:300px;">
+          <h3 style="font-size:14px; margin:0 0 10px;">🥡 À emporter</h3>
+          <div id="fileListEmporter" style="display:flex; flex-direction:column; gap:10px;"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PLAN DE SALLE -->
+    <section id="view-salle" class="view">
+      <div class="salle-toolbar" id="salleToolbar">
+        <button id="btnTableRonde">+ Table ronde</button>
+        <button id="btnTableCarree">+ Table carrée</button>
+        <button id="btnTableRect">+ Table rectangulaire</button>
+        <button class="reset" id="btnResetSalle">Réinitialiser le plan</button>
+      </div>
+      <div class="sync-note" id="salleNoteServeur" style="display:none; margin:10px;">
+        Le plan de salle est géré depuis la caisse principale (iPad). Tu peux voir les tables et taper dessus pour accéder à une commande, mais pas modifier le plan.
+      </div>
+      <div class="salle-room" id="salleRoom"></div>
+    </section>
+
+    <!-- RESERVATIONS -->
+    <section id="view-reservations" class="view" style="flex-direction:column; overflow-y:auto; padding:16px;">
+      <div class="sync-note" style="margin-bottom:14px;">
+        Les réservations sont synchronisées en direct entre tous les appareils (iPad et téléphones des serveurs).
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
+        <div class="mode-toggle" id="resaToggle" style="background:var(--creme2); display:inline-flex;">
+          <button data-resa="jour" class="active" style="color:var(--rouge-fonce);">Aujourd'hui</button>
+          <button data-resa="avenir" style="color:var(--rouge-fonce);">À venir</button>
+          <button data-resa="passees" style="color:var(--rouge-fonce);">Passées</button>
+        </div>
+        <button class="btn-save" id="btnNouvelleResa">+ Nouvelle réservation</button>
+      </div>
+      <div id="resaList" style="display:flex; flex-direction:column; gap:10px;"></div>
+    </section>
+
+    <!-- CLASSEMENT -->
+    <section id="view-classement" class="view">
+      <div class="classement-grid">
+        <div class="classement-card">
+          <h3>🍕 Pizzas les plus vendues</h3>
+          <div id="rankPizzas"></div>
+        </div>
+        <div class="classement-card">
+          <h3>➕ Suppléments les plus ajoutés</h3>
+          <div id="rankSupps"></div>
+        </div>
+      </div>
+      <button class="btn-reset-class" id="btnResetClassement">Réinitialiser le classement</button>
+    </section>
+
+    <!-- REGLAGES -->
+    <section id="view-reglages" class="view">
+      <div class="reg-card">
+        <h3>Informations restaurant</h3>
+        <div class="desc">Ces infos apparaissent sur le ticket.</div>
+        <div class="field"><label>Nom</label><input id="regNom" value="Pizz'Amore 2.0"></div>
+        <div class="field"><label>Adresse</label><input id="regAdresse" value="4 Rue du Véret, 74140 Messery"></div>
+        <div class="field"><label>Téléphone</label><input id="regTel" placeholder="ex: 07 65 23 26 37"></div>
+        <div class="field siret">
+          <label>N° SIRET (modifiable à tout moment)</label>
+          <input id="regSiret" placeholder="à renseigner dès que tu l'as">
+        </div>
+        <div class="field">
+          <label>TVA appliquée</label>
+          <span class="tva-badge">10 % sur le total</span>
+        </div>
+        <div class="field">
+          <label>Cet appareil est</label>
+          <select id="regRole" style="width:100%; padding:10px 12px; border-radius:8px; border:1.5px solid #e9ddc9; font-size:14px;">
+            <option value="ipad">Caisse principale (iPad)</option>
+            <option value="serveur">Serveur (iPhone)</option>
+          </select>
+        </div>
+        <button class="btn-save" id="btnSaveReglages">Enregistrer</button>
+      </div>
+
+      <div class="reg-card">
+        <h3>Imprimantes</h3>
+        <div class="desc">L'appli utilise l'impression du navigateur/iPad (AirPrint) : au moment d'imprimer, tu choisis l'imprimante dans la fenêtre qui s'ouvre. Ajoute ici leurs noms pour que l'appli te rappelle laquelle choisir.</div>
+        <div class="field">
+          <label>Imprimante(s) caisse / ticket / facture (client)</label>
+          <div id="admImpCaisseList" style="display:flex; flex-direction:column; gap:6px; margin-bottom:10px;"></div>
+          <button class="btn-save" id="admImpCaisseAdd" style="background:#2b4a7d;">+ Ajouter une imprimante caisse</button>
+        </div>
+        <div class="field" style="margin-top:16px;">
+          <label>Imprimante(s) cuisine (pizzaiolo)</label>
+          <div id="admImpCuisineList" style="display:flex; flex-direction:column; gap:6px; margin-bottom:10px;"></div>
+          <button class="btn-save" id="admImpCuisineAdd" style="background:#2b2420;">+ Ajouter une imprimante cuisine</button>
+        </div>
+      </div>
+
+      <div class="reg-card" style="max-width:620px;">
+        <h3>Gestion des suppléments</h3>
+        <div class="desc">Prix modifiables à tout moment. Triés par ordre alphabétique.</div>
+        <div id="admSuppList" style="display:flex; flex-direction:column; gap:6px; max-height:320px; overflow-y:auto; margin-bottom:12px;"></div>
+        <button class="btn-save" id="admSuppAdd" style="background:var(--vert);">+ Ajouter un supplément</button>
+      </div>
+
+      <div class="reg-card" style="max-width:720px;">
+        <h3>Gestion du menu</h3>
+        <div class="desc">Ajoute, modifie ou supprime des catégories et des articles (pizzas, boissons...). Les prix peuvent différer entre "sur place" et "à emporter".</div>
+        <div class="mode-toggle" id="admModeToggle" style="background:var(--creme2); display:inline-flex; margin-bottom:14px;">
+          <button data-admmode="surPlace" class="active" style="color:var(--rouge-fonce);">Sur place</button>
+          <button data-admmode="emporter" style="color:var(--rouge-fonce);">À emporter</button>
+        </div>
+        <div id="admMenu"></div>
+        <button class="btn-save" id="admCatAdd" style="background:var(--vert); margin-top:10px;">+ Ajouter une catégorie</button>
+      </div>
+
+      <div class="reg-card">
+        <h3>Installer sur iPad / iPhone</h3>
+        <div class="desc">Pas besoin de passer par l'App Store.</div>
+        <div class="sync-note">
+          1. Ouvre cette adresse dans <b>Safari</b> sur l'iPad (une fois mise en ligne).<br>
+          2. Appuie sur l'icône <b>Partager</b> (le carré avec la flèche vers le haut).<br>
+          3. Choisis <b>« Sur l'écran d'accueil »</b>.<br>
+          4. L'icône Pizz'Amore 2.0 apparaît comme une vraie appli, en plein écran, sans barre Safari.<br>
+          Fais pareil sur chaque iPhone des serveurs.
+        </div>
+      </div>
+
+      <div class="reg-card">
+        <h3>Synchronisation serveurs ↔ iPad</h3>
+        <div class="desc">Active (Firebase). Pense à mettre à jour les règles Firestore avant les 30 jours du mode test.</div>
+        <div class="sync-note">
+          Configure le champ "Cet appareil est" ci-dessus sur chaque appareil. Le statut en haut à droite de l'écran indique si la synchro fonctionne.
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h3 id="modalTitle">Titre</h3>
+    <input id="modalInput" type="text" inputmode="decimal">
+    <div class="mrow">
+      <button class="cancel" id="modalCancel">Annuler</button>
+      <button class="confirm" id="modalConfirm">Valider</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="heureOverlay">
+  <div class="modal">
+    <h3>Heure de retrait</h3>
+    <input id="heureInput" type="text" inputmode="numeric" placeholder="ex: 1930" maxlength="5" style="text-align:center; font-size:22px; letter-spacing:2px; font-weight:800;">
+    <div style="display:flex; gap:6px; margin:-6px 0 14px;">
+      <button class="perso-chip" data-plus="5" style="flex:1; text-align:center;">+5 min</button>
+      <button class="perso-chip" data-plus="10" style="flex:1; text-align:center;">+10 min</button>
+      <button class="perso-chip" data-plus="15" style="flex:1; text-align:center;">+15 min</button>
+      <button class="perso-chip" data-plus="20" style="flex:1; text-align:center;">+20 min</button>
+    </div>
+    <div class="mrow">
+      <button class="cancel" id="heureCancel">Annuler</button>
+      <button class="confirm" id="heureConfirm">Valider</button>
+    </div>
+    <button class="cancel" id="heureAucune" style="width:100%; margin-top:10px; padding:11px; border-radius:9px; border:none; font-weight:700; cursor:pointer; font-size:13px;">Pas d'heure</button>
+  </div>
+</div>
+
+<div class="overlay" id="resaOverlay">
+  <div class="modal" style="max-width:380px; text-align:left;">
+    <h3 id="resaTitle">Nouvelle réservation</h3>
+    <div class="field"><label>Nom</label><input id="resaNom" type="text" placeholder="ex: Famille Martin"></div>
+    <div class="field"><label>Téléphone</label><input id="resaTel" type="tel" placeholder="ex: 06 12 34 56 78"></div>
+    <div style="display:flex; gap:10px;">
+      <div class="field" style="flex:1;"><label>Date</label><input id="resaDate" type="date"></div>
+      <div class="field" style="flex:1;"><label>Heure</label><input id="resaHeure" type="text" inputmode="numeric" maxlength="5" placeholder="ex: 1930"></div>
+    </div>
+    <div class="field"><label>Nombre de couverts</label><input id="resaCouverts" type="number" min="1" inputmode="numeric" placeholder="ex: 4"></div>
+    <div class="mrow">
+      <button class="cancel" id="resaCancel">Annuler</button>
+      <button class="confirm" id="resaConfirm">Valider</button>
+    </div>
+    <button class="cancel" id="resaDelete" style="display:none; width:100%; margin-top:10px; padding:11px; border-radius:9px; border:1px dashed var(--rouge); background:none; color:var(--rouge); font-weight:700; cursor:pointer; font-size:13px;">🗑️ Supprimer la réservation</button>
+  </div>
+</div>
+
+<div class="overlay" id="tableOverlay">
+  <div class="modal">
+    <h3>Choisir une table</h3>
+    <div id="tableList" style="display:flex; flex-direction:column; gap:8px; max-height:340px; overflow-y:auto; margin-bottom:14px;"></div>
+    <div class="mrow">
+      <button class="cancel" id="tableOverlayCancel">Fermer</button>
+      <button class="confirm" id="tableOverlayNone">Pas de table</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="persoOverlay">
+  <div class="modal" style="max-width:420px; text-align:left;">
+    <h3 id="persoTitle">Personnaliser</h3>
+    <div id="persoSuppsSection">
+      <div style="font-size:12px; font-weight:700; color:var(--gris); margin-bottom:6px;">Ajouter un supplément</div>
+      <div id="persoSupps" style="display:flex; flex-wrap:wrap; gap:6px; max-height:140px; overflow-y:auto; margin-bottom:12px;"></div>
+    </div>
+    <div id="persoRetirerSection">
+      <div style="font-size:12px; font-weight:700; color:var(--gris); margin-bottom:6px;">À retirer (clique sur un ingrédient)</div>
+      <div id="persoRetirer" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;"></div>
+    </div>
+    <div id="persoSuppsAjoutesSection">
+      <div style="font-size:12px; font-weight:700; color:var(--gris); margin-bottom:6px;">Suppléments ajoutés</div>
+      <div id="persoSuppsAjoutes" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;"></div>
+    </div>
+    <div style="font-size:12px; font-weight:700; color:var(--gris); margin-bottom:6px;">Commentaire</div>
+    <div id="persoNotes" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;"></div>
+    <div style="display:flex; gap:6px; margin-bottom:12px;">
+      <input id="persoNoteInput" type="text" placeholder="écrire ici et valider..." style="flex:1; padding:9px 10px; border:1.5px solid #e9ddc9; border-radius:8px; font-size:13px;">
+      <button class="perso-chip" id="btnPersoAjouterNote">Ajouter</button>
+    </div>
+    <button class="confirm" id="persoValider" style="width:100%; margin-bottom:10px; display:none;">✅ Valider</button>
+    <button class="cancel" id="persoClose" style="width:100%; padding:11px; border-radius:9px; border:none; font-weight:700; cursor:pointer; font-size:13px;">Fermer</button>
+  </div>
+</div>
+
+<div class="overlay" id="diviserOverlay">
+  <div class="modal" style="max-width:440px; text-align:left;">
+    <h3>Diviser l'addition</h3>
+    <div class="mrow" style="margin-bottom:14px;">
+      <button class="perso-chip actif" id="divModeEgal" style="flex:1;">Parts égales</button>
+      <button class="perso-chip" id="divModeArticle" style="flex:1;">Par article</button>
+    </div>
+    <div id="divEgalPanel">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+        <span style="font-size:13px; font-weight:700;">Nombre de parts</span>
+        <button class="perso-chip" id="divMoins" style="padding:6px 12px;">−</button>
+        <span id="divN" style="font-size:16px; font-weight:800; min-width:24px; text-align:center;">2</span>
+        <button class="perso-chip" id="divPlus" style="padding:6px 12px;">+</button>
+      </div>
+      <div id="divEgalResult" style="font-size:14px; line-height:1.8;"></div>
+    </div>
+    <div id="divArticlePanel" style="display:none;">
+      <div style="font-size:11.5px; color:var(--gris); margin-bottom:8px;">Appuie sur un article pour lui attribuer une personne (1, 2, 3...).</div>
+      <div id="divArticleList" style="display:flex; flex-direction:column; gap:6px; max-height:260px; overflow-y:auto; margin-bottom:12px;"></div>
+      <div id="divArticleResult" style="font-size:14px; line-height:1.8; border-top:1px solid #eee2cc; padding-top:10px;"></div>
+    </div>
+    <div class="mrow" style="margin-top:14px;">
+      <button class="confirm" id="divClose" style="width:100%;">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="confirmOverlay">
+  <div class="modal">
+    <h3 id="confirmTitle">Confirmer</h3>
+    <p id="confirmMsg" style="font-size:13.5px; color:var(--encre); margin:0 0 16px;"></p>
+    <div class="mrow">
+      <button class="cancel" id="confirmNo">Non</button>
+      <button class="confirm" id="confirmYes">Oui</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="commandeDetailOverlay">
+  <div class="modal" style="max-width:420px; text-align:left;">
+    <h3 id="detailTitle">Commande</h3>
+    <div id="detailResume" style="font-size:12px; color:var(--gris); font-weight:700; margin-bottom:10px;"></div>
+    <div id="detailLignes" style="font-size:13.5px; margin-bottom:10px; max-height:220px; overflow-y:auto; border-top:1px solid #f1e9d8; border-bottom:1px solid #f1e9d8; padding:8px 0;"></div>
+    <div style="font-weight:800; font-size:16px; margin-bottom:16px; display:flex; justify-content:space-between;">
+      <span>Total</span><span id="detailTotal">0,00 €</span>
+    </div>
+    <button class="btn-save" id="btnDetailAjouter" style="background:#2b2420; margin-bottom:10px; width:100%;">➕ Ajouter des articles</button>
+    <div class="paiement-chips" id="detailPaiementChips" style="padding:0 0 10px;">
+      <button class="chip-paiement" data-mode="espece" id="detailChipEspece">💶 Espèces</button>
+      <button class="chip-paiement" data-mode="carte" id="detailChipCarte">💳 Carte</button>
+    </div>
+    <div style="display:flex; gap:6px; margin-bottom:10px;">
+      <button id="btnDetailEncaisser" style="flex:1; padding:12px 4px; border-radius:10px; border:none; font-weight:700; font-size:12.5px; cursor:pointer; background:var(--ok); color:#fff;">💳 Encaisser</button>
+      <button id="btnDetailDetaille" style="flex:1; padding:12px 4px; border-radius:10px; border:none; font-weight:700; font-size:11.5px; cursor:pointer; background:#f1e9d8; color:var(--encre);">📄 Ticket détaillé</button>
+      <button id="btnDetailFacture" style="flex:1; padding:12px 4px; border-radius:10px; border:none; font-weight:700; font-size:12.5px; cursor:pointer; background:#2b4a7d; color:#fff;">🧾 Facture</button>
+    </div>
+    <button class="cancel" id="btnDetailClose" style="width:100%;">Fermer</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div id="ticket-print"></div>
+
+<!-- Firebase (synchro temps réel serveurs <-> iPad) -->
+<script src="https://www.gstatic.com/firebasejs/12.6.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAI_4KYnhMom2nzEo3r7Y1CwG3y2GB8RoU",
+    authDomain: "pizzamore2-messery.firebaseapp.com",
+    projectId: "pizzamore2-messery",
+    storageBucket: "pizzamore2-messery.firebasestorage.app",
+    messagingSenderId: "683884145089",
+    appId: "1:683884145089:web:61e7c98d9ebfa7f11de740"
+  };
+  let fbDb = null, fbOk = false;
+  try{
+    firebase.initializeApp(firebaseConfig);
+    fbDb = firebase.firestore();
+    fbOk = true;
+  }catch(e){ console.error('Firebase init error', e); }
+</script>
+
+<script>
+/* ===================== DONNÉES MENU (source: pizzamore74.fr/Messery) ===================== */
+// Descriptions (ingrédients) communes aux pizzas, quel que soit le mode
+const DESC = {
+  "Marinara":"Tomate, ail, origan, basilic",
+  "Marinara Pesto":"Tomate, pesto, basilic, origan",
+  "Margherita":"Tomate, mozza, basilic",
+  "Napoli":"Tomate, mozza, anchois, câpres",
+  "Diavola":"Tomate, mozza, salami piquant, olives",
+  "Classique":"Tomate, mozza, jambon, champignons",
+  "Végétarienne":"Tomate, mozza, aubergine, courgette, poivrons",
+  "Quatre Saisons":"Tomate, mozza, jambon, champignons, olives, artichaut",
+  "Italienne":"Tomate, mozza, thon, oignons",
+  "La Carbonara":"Crème fraîche, œuf, pecorino, poivre, guanciale",
+  "La Chèvre":"Crème fraîche, mozza, chèvre, miel",
+  "La Quatre Fromages":"Mozza, mascarpone, gorgonzola, parmesan",
+  "La Montagnarde":"Crème fraîche, raclette, patate, jambon",
+  "L'Étoile Blanche":"Crème fraîche, mozza, jambon, roquette, parmesan",
+  "La Genova":"Pesto, mozza, courgette, roquette, parmesan",
+  "La Mortadelle":"Mortadelle, roquette, burrata, tomate cerise",
+  "La Provençale":"Crème fraîche, viande hachée, mozza, poivrons grillés",
+  "La Regina":"Tomate, bufala, tomate cerise, basilic",
+  "La Pizza du Terroir":"Tomate, mozza, saucisse, aubergine, provola fumée",
+  "L'Amoureuse":"Tomate, mozza, jambon cru, tomate cerise, roquette, burrata",
+  "La Bœuf":"Tomate, mozza, viande hachée, œuf, roquette, parmesan",
+  "La Sublime":"Crème de cèpes, saucisse, bufala, tomate cerise",
+  "La Carpaccio Burrata":"Carpaccio de bœuf, roquette, burrata, parmesan",
+  "La Burrata Pistachée":"Crème de pistache, burrata, jambon cru, éclats de pistache",
+  "La Truffe":"Crème de truffe, mozza, champignon, œuf, burrata truffée, huile truffée (lamelles +6€)",
+  "La Fitness":"Bresaola, philadelphia, noix",
+  "La Estate":"Crème fraîche, mozza, roquette, tomate cerise, avocat, saumon fumé, philadelphia",
+  "La Classique (calzone)":"Tomate, mozza, jambon, œuf",
+  "La Truffette":"Crème de truffe, mozza, jambon, gorgonzola, provola fumée, huile truffée",
+  "Focaccia Zio":"Crème truffée, mozza, jambon, œuf, parmesan, huile truffée"
+};
+function d(nom){ return DESC[nom] || ""; }
+
+const DEFAULT_MENU = {
+  surPlace: {
+    "Entrées": [["Salade verte",4.50],["Duo de Bruschetta mix",5.00],["Légumes grillés",10.00],["Œuf truffé",12.00],["Assiette charcuterie & fromage",13.00],["Carpaccio de bœuf et parmesan",14.00],["Salade Caprese",14.00]],
+    "Pizzas Classiques": [["Marinara",9.00,d("Marinara")],["Marinara Pesto",11.00,d("Marinara Pesto")],["Margherita",11.00,d("Margherita")],["Napoli",14.00,d("Napoli")],["Diavola",14.00,d("Diavola")],["Classique",14.00,d("Classique")],["Végétarienne",15.00,d("Végétarienne")],["Quatre Saisons",15.50,d("Quatre Saisons")],["Italienne",15.50,d("Italienne")]],
+    "Pizzas Blanches": [["La Carbonara",14.50,d("La Carbonara")],["La Chèvre",14.50,d("La Chèvre")],["La Quatre Fromages",15.50,d("La Quatre Fromages")],["La Montagnarde",15.50,d("La Montagnarde")],["L'Étoile Blanche",16.00,d("L'Étoile Blanche")],["La Genova",16.50,d("La Genova")],["La Mortadelle",17.00,d("La Mortadelle")],["La Provençale",17.00,d("La Provençale")]],
+    "Pizzas Exclusives": [["La Regina",16.00,d("La Regina")],["La Pizza du Terroir",16.00,d("La Pizza du Terroir")],["L'Amoureuse",19.00,d("L'Amoureuse")],["La Bœuf",19.00,d("La Bœuf")],["La Sublime",19.00,d("La Sublime")],["La Truffe",19.00,d("La Truffe")],["La Carpaccio Burrata",20.00,d("La Carpaccio Burrata")],["La Burrata Pistachée",20.00,d("La Burrata Pistachée")]],
+    "Pizzas Spéciales": [["La Fitness",20.00,d("La Fitness")],["La Estate",20.00,d("La Estate")]],
+    "Calzones": [["La Classique",14.50,d("La Classique (calzone)")],["La Truffette",17.00,d("La Truffette")]],
+    "Focacce": [["Focaccia Zio",18.00,d("Focaccia Zio")]],
+    "Desserts": [["Glace 1 boule",2.50],["Tiramisu café",7.00],["Tiramisu fruits",7.00],["Tiramisu pistache",8.00],["Petite Calzone Sucrée",7.00],["Cannoli Siciliani",7.00],["Pizza Nutella",9.00],["Bonet",10.00],["Café Gourmand",11.00]],
+    "Vins Blancs": [["Chardonnay Toscana (verre)",6.00],["Chardonnay Toscana (bouteille)",27.50]],
+    "Vins Rosés": [["Rosato Trevenezie (verre)",5.00],["Rosato Trevenezie (bouteille)",22.50]],
+    "Vins Rouges": [["Lambrusco d'Emilia (verre)",5.50],["Primitivo Puglia (verre)",5.50],["Nero d'Avola (verre)",5.50],["Bouteille de rouge","libre"]],
+    "Vins d'Exception": [["Barolo d'Alba (bouteille)",75.00]],
+    "Vins Sucrés & Spumante": [["Moscato d'Asti (verre)",7.00],["Moscato d'Asti (bouteille)",30.00],["Franciacorta Satèn (bouteille)",90.00]],
+    "Cocktails & Apéritifs": [["Prosecco",5.00],["Kir",6.00],["Spritz Aperol / Campari",11.00],["Spritz Limoncello / Cassis / Mûre",12.00]],
+    "Digestifs": [["Amaro",7.00],["Limoncello",7.00]],
+    "Boissons & Cafés": [["Espresso",2.00],["Double espresso",3.00],["Thé",3.00],["Cappuccino",3.50],["Evian 50cl",4.50],["San Pellegrino 50cl",4.50],["Soft (Coca, Sprite...)",4.00],["Moretti pression 25cl",4.00],["Moretti pression 50cl",7.00],["Peroni 33cl",4.50]]
+  },
+  emporter: {
+    "Pizzas Classiques": [["Marinara",8.00,d("Marinara")],["Marinara Pesto",10.00,d("Marinara Pesto")],["Margherita",10.00,d("Margherita")],["Napoli",13.00,d("Napoli")],["Diavola",13.00,d("Diavola")],["Classique",13.00,d("Classique")],["Végétarienne",14.00,d("Végétarienne")],["Quatre Saisons",14.50,d("Quatre Saisons")],["Italienne",14.50,d("Italienne")]],
+    "Pizzas Blanches": [["La Carbonara",13.50,d("La Carbonara")],["La Chèvre",13.50,d("La Chèvre")],["La Quatre Fromages",14.50,d("La Quatre Fromages")],["La Montagnarde",14.50,d("La Montagnarde")],["L'Étoile Blanche",15.00,d("L'Étoile Blanche")],["La Genova",15.50,d("La Genova")],["La Mortadelle",16.00,d("La Mortadelle")],["La Provençale",16.00,d("La Provençale")]],
+    "Pizzas Exclusives": [["La Regina",14.00,d("La Regina")],["La Pizza du Terroir",15.00,d("La Pizza du Terroir")],["L'Amoureuse",17.00,d("L'Amoureuse")],["La Bœuf",17.00,d("La Bœuf")],["La Sublime",18.00,d("La Sublime")],["La Carpaccio Burrata",18.00,d("La Carpaccio Burrata")],["La Burrata Pistachée",18.00,d("La Burrata Pistachée")],["La Truffe",18.00,d("La Truffe")]],
+    "Pizzas Spéciales": [["La Fitness",20.00,d("La Fitness")],["La Estate",20.00,d("La Estate")]],
+    "Calzones": [["La Classique",13.50,d("La Classique (calzone)")],["La Truffette",16.00,d("La Truffette")]],
+    "Focacce": [["Focaccia Zio",17.00,d("Focaccia Zio")]],
+    "Desserts": [["Tiramisu café",5.00],["Tiramisu fraise",5.00],["Tiramisu pistache",6.00],["Baba au rhum",6.00],["Petite Calzone Sucrée",6.00],["Cannoli Siciliani",7.00],["Pizza Nutella",8.00],["Bonet",9.00],["Café Gourmand",11.00]],
+    "Boissons": [["Eau plate / pétillante",1.50],["Soda",2.00],["Peroni",3.50]]
+  }
+};
+
+const DEFAULT_SUPPLEMENTS = [["Ail",0.50],["Miel",0.50],["Câpres",1.00],["Olives",1.00],["Champignons",1.00],["Oignon",1.00],["Crème",1.00],["Sauce tomate",1.00],["Mascarpone",1.00],["Roquette",1.00],["Œuf",1.00],["Mozzarella",1.50],["Aubergine",1.50],["Courgette",1.50],["Poivron",1.50],["Artichaut",1.50],["Patate",1.50],["Pesto",1.50],["Tomate cerise",1.50],["Anchois",2.00],["Salami piquant",2.00],["Jambon",2.00],["Parmesan",2.00],["Gorgonzola",2.00],["Raclette",2.00],["Mortadelle",2.00],["Provola fumée",2.00],["Abondance",2.00],["Crème truffe",2.50],["Saucisse",3.00],["Poulet",3.00],["Jambon cru",3.00],["Stracchino",3.00],["Chèvre",3.00],["Thon",3.50],["Burrata",3.50],["Bufala",3.50],["Steak",4.50],["Steak halal",4.50],["Burrata truffe",5.50],["Lamelles de truffe",6.00]];
+
+/* ---- Menu & suppléments modifiables depuis les Réglages (persistés en localStorage) ---- */
+function getMenu(){
+  const raw = localStorage.getItem('pa2_menu');
+  if(raw){ try{ return JSON.parse(raw); }catch(e){} }
+  return JSON.parse(JSON.stringify(DEFAULT_MENU));
+}
+function setMenu(m){ localStorage.setItem('pa2_menu', JSON.stringify(m)); }
+function getSupplements(){
+  const raw = localStorage.getItem('pa2_supplements');
+  let list;
+  if(raw){ try{ list = JSON.parse(raw); }catch(e){ list = null; } }
+  if(!list) list = JSON.parse(JSON.stringify(DEFAULT_SUPPLEMENTS));
+  // nettoyage : "Bien cuite"/"Pas trop cuite" ne sont plus des suppléments — la cuisson se
+  // choisit maintenant directement par pizza dans le panier (section "Cuisson" du "⋯")
+  const cuissonNoms = ['bien cuite', 'pas trop cuite'];
+  const filtered = list.filter(([nom]) => !cuissonNoms.includes((nom||'').trim().toLowerCase()));
+  if(filtered.length !== list.length) setSupplements(filtered);
+  return filtered;
+}
+function setSupplements(s){ localStorage.setItem('pa2_supplements', JSON.stringify(s)); }
+
+/* ===================== ETAT ===================== */
+let state = {
+  mode: localStorage.getItem('pa2_mode') || 'surPlace',
+  cart: JSON.parse(localStorage.getItem('pa2_cart') || '[]'),
+  selectedLine: null,
+  currentCat: null,
+  activeFirestoreId: null,
+  table: JSON.parse(localStorage.getItem('pa2_table') || 'null'),
+  heureRetrait: localStorage.getItem('pa2_heureretrait') || null,
+  // ids des lignes déjà envoyées en cuisine pour la commande en cours d'édition (chargée via
+  // "Ajouter des articles") : sert à ne réimprimer en cuisine que les nouveaux articles ajoutés
+  lignesEnvoyees: JSON.parse(localStorage.getItem('pa2_lignesenvoyees') || '[]'),
+  // mode de paiement choisi pour la commande en cours : 'carte', 'espece' ou null (pas encore choisi)
+  modePaiement: localStorage.getItem('pa2_modepaiement') || null,
+  // "à couper" s'applique à toute la commande (plus de réglage pizza par pizza, trop long à faire)
+  couperCommande: localStorage.getItem('pa2_coupercommande') === '1'
+};
+let commandesActives = [];
+let nextLineId = 1;
+state.cart.forEach(l => { if(l.id >= nextLineId) nextLineId = l.id + 1; });
+
+const fmt = n => n.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' €';
+const save = () => {
+  localStorage.setItem('pa2_mode', state.mode);
+  localStorage.setItem('pa2_cart', JSON.stringify(state.cart));
+  localStorage.setItem('pa2_table', JSON.stringify(state.table));
+  localStorage.setItem('pa2_heureretrait', state.heureRetrait || '');
+  localStorage.setItem('pa2_lignesenvoyees', JSON.stringify(state.lignesEnvoyees || []));
+  localStorage.setItem('pa2_modepaiement', state.modePaiement || '');
+  localStorage.setItem('pa2_coupercommande', state.couperCommande ? '1' : '0');
+};
+
+/* ===================== TOAST / MODALE ===================== */
+function toast(msg, ms){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._tm); t._tm = setTimeout(()=>t.classList.remove('show'), ms || 1800);
+}
+function askNumber(title, placeholder, cb){
+  const ov = document.getElementById('overlay');
+  const inp = document.getElementById('modalInput');
+  document.getElementById('modalTitle').textContent = title;
+  inp.value = ''; inp.placeholder = placeholder || '';
+  ov.classList.add('show');
+  inp.focus();
+  const onConfirm = () => {
+    const v = inp.value.replace(',', '.').trim();
+    if(v === '' || isNaN(v)){ toast('Entre un nombre valide'); return; }
+    cleanup(); cb(parseFloat(v));
+  };
+  const onCancel = () => cleanup();
+  function cleanup(){
+    ov.classList.remove('show');
+    document.getElementById('modalConfirm').removeEventListener('click', onConfirm);
+    document.getElementById('modalCancel').removeEventListener('click', onCancel);
+  }
+  document.getElementById('modalConfirm').addEventListener('click', onConfirm);
+  document.getElementById('modalCancel').addEventListener('click', onCancel);
+}
+function askText(title, placeholder, cb, prefill){
+  const ov = document.getElementById('overlay');
+  const inp = document.getElementById('modalInput');
+  inp.inputMode = 'text'; inp.type = 'text';
+  document.getElementById('modalTitle').textContent = title;
+  inp.value = prefill || ''; inp.placeholder = placeholder || '';
+  ov.classList.add('show');
+  inp.focus();
+  const onConfirm = () => {
+    const v = inp.value.trim();
+    if(v === ''){ toast('Entre un texte'); return; }
+    cleanup(); cb(v);
+    inp.inputMode = 'decimal';
+  };
+  const onCancel = () => { cleanup(); inp.inputMode = 'decimal'; };
+  function cleanup(){
+    ov.classList.remove('show');
+    document.getElementById('modalConfirm').removeEventListener('click', onConfirm);
+    document.getElementById('modalCancel').removeEventListener('click', onCancel);
+  }
+  document.getElementById('modalConfirm').addEventListener('click', onConfirm);
+  document.getElementById('modalCancel').addEventListener('click', onCancel);
+}
+function askConfirm(title, msg, cb){
+  const ov = document.getElementById('confirmOverlay');
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmMsg').textContent = msg;
+  ov.classList.add('show');
+  const yes = document.getElementById('confirmYes');
+  const no = document.getElementById('confirmNo');
+  const onYes = ()=>{ cleanup(); cb(); };
+  const onNo = ()=> cleanup();
+  function cleanup(){
+    ov.classList.remove('show');
+    yes.removeEventListener('click', onYes);
+    no.removeEventListener('click', onNo);
+  }
+  yes.addEventListener('click', onYes);
+  no.addEventListener('click', onNo);
+}
+
+/* ===================== NAVIGATION ===================== */
+document.getElementById('tabs').addEventListener('click', e=>{
+  const btn = e.target.closest('button[data-view]');
+  if(!btn) return;
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-' + btn.dataset.view).classList.add('active');
+  if(btn.dataset.view === 'classement') renderClassement();
+  if(btn.dataset.view === 'salle') renderSalle();
+});
+
+document.getElementById('modeToggle').addEventListener('click', e=>{
+  const btn = e.target.closest('button[data-mode]');
+  if(!btn) return;
+  if(btn.dataset.mode === state.mode) return;
+  const doSwitch = () => {
+    state.mode = btn.dataset.mode;
+    document.querySelectorAll('#modeToggle button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('cartModeLbl').textContent = state.mode === 'surPlace' ? 'Sur place' : 'À emporter';
+    state.currentCat = null;
+    if(state.mode === 'emporter') state.table = null;
+    if(state.mode === 'surPlace') state.heureRetrait = null;
+    renderCats(); renderItems(); save(); updateTableBtn(); updateRetraitBtn();
+  };
+  if(state.cart.length){
+    askConfirm('Changer de mode', 'Ça va vider la commande en cours. Continuer ?', doSwitch);
+  } else doSwitch();
+});
+
+/* ===================== PLAN DE SALLE : choix de table pour "sur place" ===================== */
+function getOccupiedTableIds(){
+  const ids = new Set();
+  commandesActives.forEach(c=>{ if(c.data.table && c.data.table.id) ids.add(c.data.table.id); });
+  if(state.table && state.cart.length) ids.add(state.table.id);
+  return ids;
+}
+// heure d'arrivée : la plus ancienne connue pour chaque table occupée (synchro + commande locale en cours)
+function getTableArrivalTimes(){
+  const map = {};
+  commandesActives.forEach(c=>{
+    const tb = c.data.table;
+    if(tb && tb.id && tb.heureArrivee){
+      if(!map[tb.id] || tb.heureArrivee < map[tb.id]) map[tb.id] = tb.heureArrivee;
+    }
+  });
+  if(state.table && state.cart.length && state.table.heureArrivee){
+    const id = state.table.id;
+    if(!map[id] || state.table.heureArrivee < map[id]) map[id] = state.table.heureArrivee;
+  }
+  return map;
+}
+function formatHeure(ts){
+  return new Date(ts).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+}
+function updateTableBtn(){
+  const btn = document.getElementById('btnChoisirTable');
+  if(state.mode !== 'surPlace'){ btn.style.display = 'none'; return; }
+  btn.style.display = 'block';
+  btn.textContent = state.table ? `🍽️ Table ${state.table.num} (${state.table.couverts} couv.) — changer` : '🍽️ Choisir une table';
+}
+document.getElementById('btnChoisirTable').onclick = ()=>{
+  const tables = getTables();
+  const occ = getOccupiedTableIds();
+  const list = document.getElementById('tableList');
+  if(!tables.length){
+    list.innerHTML = '<div class="classement-empty">Aucune table créée. Vas dans "Plan de salle" pour en ajouter.</div>';
+  } else {
+    list.innerHTML = '';
+    tables.forEach(t=>{
+      const isOcc = occ.has(t.id) && !(state.table && state.table.id === t.id);
+      const row = document.createElement('div');
+      row.className = 'table-pick' + (isOcc ? ' occupee' : '');
+      row.innerHTML = `<span>Table ${t.num} — ${t.couverts} couverts</span><span class="tpstatut">${isOcc ? 'Occupée' : (state.table && state.table.id===t.id ? 'Sélectionnée' : 'Libre')}</span>`;
+      if(!isOcc){
+        row.onclick = ()=>{
+          // on garde l'heure d'arrivée déjà fixée si on ne fait que changer de table pour la même commande
+          const heureArrivee = (state.table && state.table.id === t.id && state.table.heureArrivee) ? state.table.heureArrivee : Date.now();
+          state.table = {id:t.id, num:t.num, type:t.type, couverts:t.couverts, heureArrivee};
+          save(); updateTableBtn(); renderSalle();
+          document.getElementById('tableOverlay').classList.remove('show');
+        };
+      }
+      list.appendChild(row);
+    });
+  }
+  document.getElementById('tableOverlay').classList.add('show');
+};
+document.getElementById('tableOverlayCancel').onclick = ()=> document.getElementById('tableOverlay').classList.remove('show');
+document.getElementById('tableOverlayNone').onclick = ()=>{
+  state.table = null; save(); updateTableBtn(); renderSalle();
+  document.getElementById('tableOverlay').classList.remove('show');
+};
+
+/* ===================== HEURE DE RETRAIT (à emporter) ===================== */
+function updateRetraitBtn(){
+  const btn = document.getElementById('btnHeureRetrait');
+  if(state.mode !== 'emporter'){ btn.style.display = 'none'; return; }
+  btn.style.display = 'block';
+  btn.textContent = state.heureRetrait ? `🕐 Retrait à ${state.heureRetrait} — changer` : '🕐 Heure de retrait';
+}
+// masque de saisie : on ne tape que des chiffres (4 max), le "h" s'insère tout seul entre
+// les 2 premiers et les 2 derniers (comme sur l'appli de Massongy) → "1930" devient "19h30"
+function formatHeureMasque(raw){
+  const digits = raw.replace(/\D/g,'').slice(0,4);
+  if(digits.length <= 2) return digits;
+  return digits.slice(0,2) + 'h' + digits.slice(2);
+}
+const heureInputEl = document.getElementById('heureInput');
+heureInputEl.addEventListener('input', ()=>{
+  heureInputEl.value = formatHeureMasque(heureInputEl.value);
+});
+document.getElementById('btnHeureRetrait').onclick = ()=>{
+  heureInputEl.value = state.heureRetrait ? state.heureRetrait.replace('h','') : '';
+  document.getElementById('heureOverlay').classList.add('show');
+  heureInputEl.focus();
+};
+function validerHeureRetrait(){
+  const v = formatHeureMasque(heureInputEl.value);
+  if(v && !/^\d{2}h\d{2}$/.test(v)){ toast('Heure incomplète (4 chiffres, ex: 1930)'); return; }
+  state.heureRetrait = v || null;
+  save(); updateRetraitBtn();
+  document.getElementById('heureOverlay').classList.remove('show');
+}
+document.getElementById('heureConfirm').onclick = validerHeureRetrait;
+heureInputEl.addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); validerHeureRetrait(); } });
+document.getElementById('heureCancel').onclick = ()=> document.getElementById('heureOverlay').classList.remove('show');
+document.getElementById('heureAucune').onclick = ()=>{
+  state.heureRetrait = null;
+  save(); updateRetraitBtn();
+  document.getElementById('heureOverlay').classList.remove('show');
+};
+// puces rapides "+5/10/15/20 min" : reprennent l'heure actuelle + le délai choisi, et valident
+// directement (pas besoin de retaper l'heure à la main pour les cas les plus fréquents)
+document.querySelectorAll('#heureOverlay [data-plus]').forEach(b=>{
+  b.onclick = ()=>{
+    const mins = parseInt(b.dataset.plus, 10);
+    const d = new Date(Date.now() + mins*60000);
+    const hh = String(d.getHours()).padStart(2,'0');
+    const mm = String(d.getMinutes()).padStart(2,'0');
+    state.heureRetrait = `${hh}h${mm}`;
+    save(); updateRetraitBtn();
+    document.getElementById('heureOverlay').classList.remove('show');
+  };
+});
+
+/* ===================== CATEGORIES / ITEMS ===================== */
+function renderCats(){
+  const wrap = document.getElementById('cats');
+  wrap.innerHTML = '';
+  const cats = Object.keys(getMenu()[state.mode]);
+  const special = ['__PDJ__'];
+  if(!state.currentCat || (!cats.includes(state.currentCat) && !special.includes(state.currentCat))) state.currentCat = cats[0];
+  cats.forEach(cat=>{
+    const b = document.createElement('button');
+    b.textContent = cat;
+    if(cat === state.currentCat) b.classList.add('active');
+    b.onclick = ()=>{ state.currentCat = cat; renderCats(); renderItems(); };
+    wrap.appendChild(b);
+  });
+  const pdj = document.createElement('button');
+  pdj.textContent = '⭐ Plat du jour';
+  pdj.classList.add('special');
+  if(state.currentCat === '__PDJ__') pdj.classList.add('active');
+  pdj.onclick = ()=>{ state.currentCat = '__PDJ__'; renderCats(); renderItems(); };
+  wrap.appendChild(pdj);
+}
+
+function renderItems(){
+  const grid = document.getElementById('itemsGrid');
+  grid.innerHTML = '';
+  let list;
+  if(state.currentCat === '__PDJ__') list = [["Plat du jour", "libre"]];
+  else list = getMenu()[state.mode][state.currentCat] || [];
+
+  list.forEach(([nom, prix, desc])=>{
+    const b = document.createElement('div');
+    b.className = 'item-btn' + (prix === 'libre' ? ' libre' : '');
+    const showPerso = state.currentCat !== '__PDJ__';
+    b.innerHTML = `<div class="nm">${nom}</div>` +
+      (desc ? `<div class="ds">${desc}</div>` : '') +
+      `<div class="pr">${prix === 'libre' ? 'Prix libre' : fmt(prix)}</div>` +
+      (showPerso ? `<button class="tile-perso" title="Personnaliser avant d'ajouter">⋯</button>` : '');
+    b.onclick = (e)=>{
+      if(e.target.closest('.tile-perso')){
+        // ouvre la personnalisation SANS ajouter au panier : l'ajout ne se fait qu'en cliquant
+        // "Valider" dans la fenêtre (sinon "Fermer" sans valider ajoutait quand même l'article)
+        if(prix === 'libre'){
+          askNumber('Prix du ' + nom, 'ex: 14.50', (val)=> ouvrirPersoDraft(nom, val));
+        } else {
+          ouvrirPersoDraft(nom, prix);
+        }
+      } else {
+        addItem(nom, prix);
+      }
+    };
+    grid.appendChild(b);
+  });
+}
+
+/* ===================== PANIER ===================== */
+function newLigne(nom, prix){
+  return {id: nextLineId++, nom, prix, supps: [], notes: [], cuisson: null};
+}
+// Retrouve la description (liste d'ingrédients) d'un article à partir de son nom, en cherchant
+// dans les deux modes du menu (sur place / à emporter). Seules les pizzas/calzones/focacce ont une
+// description : les desserts et boissons n'en ont pas, ce qui sert à savoir si on doit proposer
+// "Ajouter un supplément" / "À retirer" / "Cuisson", ou seulement le champ commentaire.
+function getDescriptionArticle(nom){
+  const menu = getMenu();
+  for(const mode of ['surPlace','emporter']){
+    for(const cat of Object.keys(menu[mode])){
+      const found = (menu[mode][cat] || []).find(([n]) => n === nom);
+      if(found && found[2]) return found[2];
+    }
+  }
+  return null;
+}
+function getIngredientsArticle(nom){
+  const desc = getDescriptionArticle(nom);
+  if(!desc) return [];
+  return desc.split(',').map(s => s.trim()).filter(Boolean);
+}
+function addItem(nom, prix){
+  if(prix === 'libre'){
+    askNumber('Prix du ' + nom, 'ex: 14.50', (val)=>{
+      const line = newLigne(nom, val);
+      state.cart.push(line);
+      state.selectedLine = line.id;
+      renderCart(); save();
+    });
+    return;
+  }
+  const line = newLigne(nom, prix);
+  state.cart.push(line);
+  state.selectedLine = line.id;
+  renderCart(); save();
+}
+
+function renderCart(){
+  const wrap = document.getElementById('cartLines');
+  wrap.innerHTML = '';
+  if(!state.cart.length){
+    wrap.innerHTML = '<div class="cart-empty">Panier vide</div>';
+  }
+  state.cart.forEach(line=>{
+    if(!line.notes) line.notes = [];
+    const div = document.createElement('div');
+    div.className = 'cart-line' + (line.id === state.selectedLine ? ' selected' : '');
+    const lineTotal = line.prix + line.supps.reduce((s,x)=>s+x.prix,0);
+    const cuissonChips = `<div class="line-chips" data-line-chips="${line.id}">
+      <button class="line-chip${line.cuisson==='bien'?' actif':''}" data-chip="bien">Bien cuite</button>
+      <button class="line-chip${line.cuisson==='pastrop'?' actif':''}" data-chip="pastrop">Pas trop cuite</button>
+    </div>`;
+    div.innerHTML = `<div class="row1"><span>${line.nom}</span><span>${fmt(lineTotal)} <button class="perso" data-perso-line="${line.id}">⋯</button><span class="del" data-del-line="${line.id}">✕</span></span></div>` +
+      line.supps.map((s,i)=>`<div class="sup"><span>+ ${s.nom}</span><span>${fmt(s.prix)} <span class="del" data-del-supp="${line.id}:${i}">✕</span></span></div>`).join('') +
+      line.notes.map((n,i)=>`<div class="sup"><span>– ${n}</span><span><span class="del" data-del-note="${line.id}:${i}">✕</span></span></div>`).join('') +
+      cuissonChips;
+    div.onclick = (e)=>{
+      if(e.target.closest('[data-del-line]') || e.target.closest('[data-del-supp]') || e.target.closest('[data-del-note]') || e.target.closest('[data-perso-line]') || e.target.closest('[data-chip]')) return;
+      state.selectedLine = line.id; renderCart();
+    };
+    wrap.appendChild(div);
+  });
+  wrap.querySelectorAll('[data-chip]').forEach(el=>{
+    el.onclick = (e)=>{ e.stopPropagation();
+      const lineId = parseInt(el.closest('[data-line-chips]').dataset.lineChips);
+      const line = state.cart.find(l=>l.id === lineId);
+      if(!line) return;
+      const kind = el.dataset.chip;
+      if(kind === 'bien') line.cuisson = line.cuisson === 'bien' ? null : 'bien';
+      else if(kind === 'pastrop') line.cuisson = line.cuisson === 'pastrop' ? null : 'pastrop';
+      save(); renderCart();
+    };
+  });
+  wrap.querySelectorAll('[data-del-line]').forEach(el=>{
+    el.onclick = (e)=>{ e.stopPropagation();
+      const id = parseInt(el.dataset.delLine);
+      state.cart = state.cart.filter(l=>l.id !== id);
+      if(state.selectedLine === id) state.selectedLine = null;
+      renderCart(); save();
+    };
+  });
+  wrap.querySelectorAll('[data-del-supp]').forEach(el=>{
+    el.onclick = (e)=>{ e.stopPropagation();
+      const [lid, idx] = el.dataset.delSupp.split(':').map(Number);
+      const line = state.cart.find(l=>l.id===lid);
+      if(line) line.supps.splice(idx,1);
+      renderCart(); save();
+    };
+  });
+  wrap.querySelectorAll('[data-del-note]').forEach(el=>{
+    el.onclick = (e)=>{ e.stopPropagation();
+      const [lid, idx] = el.dataset.delNote.split(':').map(Number);
+      const line = state.cart.find(l=>l.id===lid);
+      if(line && line.notes) line.notes.splice(idx,1);
+      renderCart(); save();
+    };
+  });
+  wrap.querySelectorAll('[data-perso-line]').forEach(el=>{
+    el.onclick = (e)=>{ e.stopPropagation();
+      ouvrirPersoEdit(parseInt(el.dataset.persoLine));
+    };
+  });
+  renderTotals();
+  updatePaiementChips();
+}
+
+// Met à jour l'affichage (actif/inactif) des deux puces de paiement du panier selon state.modePaiement
+function updatePaiementChips(){
+  const ce = document.getElementById('chipEspece'), cc = document.getElementById('chipCarte');
+  if(ce) ce.classList.toggle('active', state.modePaiement === 'espece');
+  if(cc) cc.classList.toggle('active', state.modePaiement === 'carte');
+  const chipCouper = document.getElementById('chipCouper');
+  if(chipCouper) chipCouper.classList.toggle('active', !!state.couperCommande);
+}
+document.getElementById('chipCouper').onclick = ()=>{
+  state.couperCommande = !state.couperCommande;
+  save(); updatePaiementChips();
+  toast(state.couperCommande ? '✂️ Commande marquée "à couper"' : 'Commande non marquée "à couper"');
+};
+
+/* ---- Modale "Personnaliser" (supplément / retrait / cuisson / découpe) ----
+   Deux façons de l'ouvrir :
+   - depuis le panier (bouton "⋯" sur une ligne déjà ajoutée) → ouvrirPersoEdit : on édite
+     directement la ligne du panier, en direct, comme avant.
+   - depuis la carte (bouton "⋯" sur un article pas encore commandé) → ouvrirPersoDraft : on
+     personnalise un article "brouillon" qui n'est PAS dans le panier. Il ne rejoint le panier
+     que si on clique "Valider" ; "Fermer" referme sans rien ajouter. */
+let persoDraftMode = false;
+let persoDraftLine = null;
+function persoLigneActuelle(){
+  return persoDraftMode ? persoDraftLine : state.cart.find(l=>l.id === state.selectedLine);
+}
+function ouvrirPersoEdit(lineId){
+  persoDraftMode = false;
+  persoDraftLine = null;
+  state.selectedLine = lineId;
+  renderPerso();
+}
+function ouvrirPersoDraft(nom, prix){
+  persoDraftMode = true;
+  persoDraftLine = {nom, prix, supps: [], notes: [], cuisson: null};
+  renderPerso();
+}
+function renderPerso(){
+  const line = persoLigneActuelle();
+  if(!line) return;
+  if(!line.notes) line.notes = [];
+  const ov = document.getElementById('persoOverlay');
+  document.getElementById('persoTitle').textContent = 'Personnaliser : ' + line.nom;
+  // pizzas/calzones/focacce ont des ingrédients (donc suppléments + à retirer a du sens) ;
+  // desserts et boissons n'en ont pas : on ne garde que le champ commentaire
+  // (la cuisson se choisit directement sur la ligne du panier, pas ici, pour éviter le doublon)
+  const ingredients = getIngredientsArticle(line.nom);
+  const aDesIngredients = ingredients.length > 0;
+  document.getElementById('persoSuppsSection').style.display = aDesIngredients ? 'block' : 'none';
+  document.getElementById('persoRetirerSection').style.display = aDesIngredients ? 'block' : 'none';
+  document.getElementById('persoSuppsAjoutesSection').style.display = aDesIngredients ? 'block' : 'none';
+
+  const suppWrap = document.getElementById('persoSupps');
+  suppWrap.innerHTML = [...getSupplements()].sort((a,b)=>a[0].localeCompare(b[0],'fr')).map(([nom,prix])=>
+    `<button class="perso-chip" data-add-supp="${nom}|${prix}">+ ${nom} (${fmt(prix)})</button>`
+  ).join('');
+  suppWrap.querySelectorAll('[data-add-supp]').forEach(b=>{
+    b.onclick = ()=>{
+      const [nom, prix] = b.dataset.addSupp.split('|');
+      line.supps.push({nom, prix: parseFloat(prix)});
+      if(!persoDraftMode) save();
+      renderCart(); renderPerso();
+    };
+  });
+
+  // Liste des suppléments déjà ajoutés à CETTE ligne, bien visible dans la fenêtre elle-même
+  // (avant on ne les voyait qu'après coup dans le panier) — clic sur ✕ pour en retirer un
+  const suppAjouteesWrap = document.getElementById('persoSuppsAjoutes');
+  suppAjouteesWrap.innerHTML = line.supps.map((s,i)=>`<span class="perso-chip actif">+ ${s.nom} (${fmt(s.prix)}) <b data-rm-supp="${i}">✕</b></span>`).join('') || '<span style="color:var(--gris); font-size:12px;">Aucun supplément ajouté</span>';
+  suppAjouteesWrap.querySelectorAll('[data-rm-supp]').forEach(b=>{
+    b.onclick = ()=>{
+      line.supps.splice(parseInt(b.dataset.rmSupp),1);
+      if(!persoDraftMode) save();
+      renderCart(); renderPerso();
+    };
+  });
+
+  // "À retirer" : les ingrédients de l'article, en vert ; un clic les passe en rouge et ajoute
+  // "sans <ingrédient>" aux remarques (donc imprimé sur le ticket comme n'importe quelle remarque)
+  const retirerWrap = document.getElementById('persoRetirer');
+  retirerWrap.innerHTML = ingredients.map(ing=>{
+    const retire = line.notes.includes('sans ' + ing);
+    return `<button class="perso-chip ${retire ? 'ingr-off' : 'ingr-on'}" data-retirer-ingr="${ing}">${ing}</button>`;
+  }).join('');
+  retirerWrap.querySelectorAll('[data-retirer-ingr]').forEach(b=>{
+    b.onclick = ()=>{
+      const ing = b.dataset.retirerIngr;
+      const note = 'sans ' + ing;
+      const idx = line.notes.indexOf(note);
+      if(idx === -1) line.notes.push(note); else line.notes.splice(idx,1);
+      if(!persoDraftMode) save();
+      renderCart(); renderPerso();
+    };
+  });
+
+  const notesWrap = document.getElementById('persoNotes');
+  notesWrap.innerHTML = line.notes.map((n,i)=>`<span class="perso-chip actif">– ${n} <b data-rm-note="${i}">✕</b></span>`).join('') || '<span style="color:var(--gris); font-size:12px;">Aucun commentaire</span>';
+  notesWrap.querySelectorAll('[data-rm-note]').forEach(b=>{
+    b.onclick = ()=>{
+      line.notes.splice(parseInt(b.dataset.rmNote),1);
+      if(!persoDraftMode) save();
+      renderCart(); renderPerso();
+    };
+  });
+  document.getElementById('persoValider').style.display = persoDraftMode ? 'block' : 'none';
+  document.getElementById('persoNoteInput').value = '';
+  ov.classList.add('show');
+  document.getElementById('persoNoteInput').focus();
+}
+function ajouterNotePerso(){
+  const line = persoLigneActuelle();
+  if(!line) return;
+  const inp = document.getElementById('persoNoteInput');
+  const texte = inp.value.trim();
+  if(!texte) return;
+  if(!line.notes) line.notes = [];
+  line.notes.push(texte);
+  inp.value = '';
+  if(!persoDraftMode) save();
+  renderCart(); renderPerso();
+}
+document.getElementById('btnPersoAjouterNote').onclick = ajouterNotePerso;
+document.getElementById('persoNoteInput').addEventListener('keydown', e=>{
+  if(e.key === 'Enter'){ e.preventDefault(); ajouterNotePerso(); }
+});
+document.getElementById('persoClose').onclick = ()=>{
+  // en mode brouillon (article pas encore ajouté), "Fermer" referme sans rien ajouter au panier
+  document.getElementById('persoOverlay').classList.remove('show');
+  persoDraftMode = false;
+  persoDraftLine = null;
+};
+document.getElementById('persoValider').onclick = ()=>{
+  if(!persoDraftMode || !persoDraftLine) return;
+  const line = {...persoDraftLine, id: nextLineId++};
+  state.cart.push(line);
+  state.selectedLine = line.id;
+  persoDraftMode = false;
+  persoDraftLine = null;
+  renderCart(); save();
+  document.getElementById('persoOverlay').classList.remove('show');
+  toast('Ajouté au panier ✅');
+};
+
+/* ===================== DIVISER L'ADDITION ===================== */
+let divN = 2;
+let divAssign = {}; // lineId -> numéro de personne (0 = non assigné)
+document.getElementById('btnDiviser').onclick = ()=>{
+  if(!state.cart.length){ toast('Panier vide'); return; }
+  divN = 2; divAssign = {};
+  state.cart.forEach(l=> divAssign[l.id] = 0);
+  switchDivMode('egal');
+  renderDivEgal();
+  renderDivArticle();
+  document.getElementById('diviserOverlay').classList.add('show');
+};
+document.getElementById('divClose').onclick = ()=> document.getElementById('diviserOverlay').classList.remove('show');
+function switchDivMode(mode){
+  document.getElementById('divModeEgal').classList.toggle('actif', mode==='egal');
+  document.getElementById('divModeArticle').classList.toggle('actif', mode==='article');
+  document.getElementById('divEgalPanel').style.display = mode==='egal' ? 'block' : 'none';
+  document.getElementById('divArticlePanel').style.display = mode==='article' ? 'block' : 'none';
+}
+document.getElementById('divModeEgal').onclick = ()=> switchDivMode('egal');
+document.getElementById('divModeArticle').onclick = ()=> switchDivMode('article');
+document.getElementById('divMoins').onclick = ()=>{ if(divN>2) divN--; renderDivEgal(); };
+document.getElementById('divPlus').onclick = ()=>{ if(divN<20) divN++; renderDivEgal(); };
+function renderDivEgal(){
+  document.getElementById('divN').textContent = divN;
+  const { ttc } = cartTotal(state.cart);
+  const part = ttc / divN;
+  let html = '';
+  for(let i=1;i<=divN;i++) html += `<div style="display:flex; justify-content:space-between;"><span>Personne ${i}</span><span style="font-weight:700;">${fmt(part)}</span></div>`;
+  html += `<div style="display:flex; justify-content:space-between; margin-top:6px; padding-top:6px; border-top:1px solid #eee2cc; font-weight:800;"><span>Total</span><span>${fmt(ttc)}</span></div>`;
+  document.getElementById('divEgalResult').innerHTML = html;
+}
+function renderDivArticle(){
+  const list = document.getElementById('divArticleList');
+  list.innerHTML = '';
+  state.cart.forEach(l=>{
+    const total = l.prix + l.supps.reduce((s,x)=>s+x.prix,0);
+    const n = divAssign[l.id] || 0;
+    const row = document.createElement('div');
+    row.className = 'table-pick';
+    row.innerHTML = `<span>${l.nom} — ${fmt(total)}</span><span class="tpstatut" style="color:${n?'var(--rouge)':'var(--gris)'}">${n ? 'Personne '+n : 'Non assigné'}</span>`;
+    row.onclick = ()=>{
+      const max = Math.max(2, divN);
+      divAssign[l.id] = n >= max ? 0 : n+1;
+      renderDivArticle();
+    };
+    list.appendChild(row);
+  });
+  const totals = {};
+  state.cart.forEach(l=>{
+    const total = l.prix + l.supps.reduce((s,x)=>s+x.prix,0);
+    const n = divAssign[l.id] || 0;
+    totals[n] = (totals[n]||0) + total;
+  });
+  let html = '';
+  Object.keys(totals).sort((a,b)=>a-b).forEach(n=>{
+    const label = n==='0' ? 'Non assigné' : 'Personne '+n;
+    html += `<div style="display:flex; justify-content:space-between;"><span>${label}</span><span style="font-weight:700;">${fmt(totals[n])}</span></div>`;
+  });
+  document.getElementById('divArticleResult').innerHTML = html;
+}
+
+function cartTotal(cart){
+  let ttc = 0;
+  (cart||state.cart).forEach(l=>{ ttc += l.prix + l.supps.reduce((s,x)=>s+x.prix,0); });
+  const ht = ttc / 1.10;
+  return { ht, tva: ttc-ht, ttc };
+}
+function renderTotals(){
+  document.getElementById('totTTC').textContent = fmt(cartTotal().ttc);
+}
+
+document.getElementById('btnVider').onclick = ()=>{
+  if(!state.cart.length) return;
+  askConfirm('Vider la commande', 'Vider la commande en cours ?', ()=>{
+    state.cart = []; state.selectedLine = null; state.table = null; state.heureRetrait = null; state.activeFirestoreId = null; state.lignesEnvoyees = []; state.modePaiement = null; state.couperCommande = false;
+    renderCart(); save(); updateTableBtn(); updateRetraitBtn(); renderSalle();
+  });
+};
+
+// Puces de paiement du panier : juste une info/sélection (espèces ou carte), re-cliquer désélectionne.
+// Note : impossible d'envoyer automatiquement le montant sur le TPE (voir discussion avec Loïc) —
+// le modèle de terminal utilisé n'offre pas cette possibilité depuis une appli web. La puce "Carte"
+// affiche donc le montant à saisir à la main sur le terminal pour aller plus vite.
+document.getElementById('chipEspece').onclick = ()=>{
+  state.modePaiement = (state.modePaiement === 'espece') ? null : 'espece';
+  save(); updatePaiementChips();
+  if(state.modePaiement === 'espece') toast('💶 Paiement espèces — ' + fmt(cartTotal(state.cart).ttc));
+};
+document.getElementById('chipCarte').onclick = ()=>{
+  state.modePaiement = (state.modePaiement === 'carte') ? null : 'carte';
+  save(); updatePaiementChips();
+  if(state.modePaiement === 'carte') toast('💳 Carte — à saisir sur le TPE : ' + fmt(cartTotal(state.cart).ttc), 4000);
+};
+
+// "Valider" envoie la commande en cuisine + dans "En cours" (nouvelle commande, ou mise à jour
+// si on était en train d'ajouter des articles à une commande déjà en cours via "Ajouter des articles").
+// Plus d'encaissement ici : ça se fait depuis "En cours" pour ne pas presser le client.
+document.getElementById('btnValider').onclick = ()=>{
+  if(!state.cart.length){ toast('Panier vide'); return; }
+  if(!(fbOk && fbDb)){
+    toast('⚠️ Pas de synchro — impossible d’envoyer la commande vers "En cours"');
+    return;
+  }
+  const role = localStorage.getItem('pa2_role') || 'ipad';
+  const finirLocal = (msg)=>{
+    toast(msg);
+    state.cart = []; state.selectedLine = null; state.activeFirestoreId = null; state.table = null; state.heureRetrait = null; state.lignesEnvoyees = []; state.modePaiement = null; state.couperCommande = false;
+    renderCart(); save(); updateTableBtn(); updateRetraitBtn(); renderSalle();
+  };
+  // on ne réimprime en cuisine que les lignes pas encore envoyées (nouveaux articles ajoutés
+  // depuis "Ajouter des articles") ; pour une commande toute neuve, tout est "nouveau"
+  const dejaEnvoyees = state.activeFirestoreId ? (state.lignesEnvoyees || []) : [];
+  const nouvellesLignes = state.cart.filter(l => !dejaEnvoyees.includes(l.id));
+  if(state.activeFirestoreId){
+    // mise à jour d'une commande déjà envoyée (ex: ajout des plats après les entrées)
+    fbDb.collection('commandes').doc(state.activeFirestoreId).update({
+      lignes: state.cart, table: state.table || null, heureRetrait: state.heureRetrait || null, statut: 'recue', modePaiement: state.modePaiement || null, couperCommande: !!state.couperCommande
+    }).then(()=> finirLocal('Commande mise à jour ✅')).catch(e=>{
+      console.error(e);
+      toast('⚠️ Synchro indisponible (' + (e && e.code ? e.code : 'erreur') + ')');
+    });
+  } else {
+    fbDb.collection('commandes').add({
+      mode: state.mode,
+      lignes: state.cart,
+      table: state.table || null,
+      heureRetrait: state.heureRetrait || null,
+      statut: 'recue',
+      envoyePar: role,
+      modePaiement: state.modePaiement || null,
+      couperCommande: !!state.couperCommande,
+      creeLe: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(()=> finirLocal('Commande validée ✅')).catch(e=>{
+      console.error(e);
+      toast('⚠️ Synchro indisponible (' + (e && e.code ? e.code : 'erreur') + ') — vérifie les règles Firestore');
+    });
+  }
+  if(nouvellesLignes.length){
+    imprimerCommandeCuisine({mode: state.mode, lignes: nouvellesLignes, table: state.table, heureRetrait: state.heureRetrait, couperCommande: state.couperCommande});
+  } else {
+    toast('Aucun nouvel article à envoyer en cuisine');
+  }
+};
+
+function enregistrerVentesPourLignes(lignes){
+  const v = getVentes();
+  (lignes||[]).forEach(line=>{
+    if(estUnePizza(line.nom) || line.nom === 'Plat du jour'){
+      v.pizzas[line.nom] = (v.pizzas[line.nom]||0) + 1;
+    }
+    (line.supps||[]).forEach(s=>{ v.supplements[s.nom] = (v.supplements[s.nom]||0) + 1; });
+  });
+  saveVentes(v);
+}
+
+/* ---- Détail d'une commande depuis "En cours" / le plan de salle : encaissement, facture, ajout ---- */
+let detailCommande = null;
+function ouvrirDetailCommande(id, data){
+  detailCommande = {id, data};
+  const titre = data.table ? `Table ${data.table.num}` : (data.mode === 'surPlace' ? 'Sur place' : 'À emporter');
+  document.getElementById('detailTitle').textContent = titre;
+  const retraitTxt = data.heureRetrait ? ` · 🕐 Retrait ${data.heureRetrait}` : '';
+  const couperTxt = data.couperCommande ? ' · ✂️ À couper' : '';
+  document.getElementById('detailResume').textContent =
+    (data.envoyePar === 'serveur' ? '📱 Envoyée par un serveur' : '🖥️ Envoyée depuis la caisse') +
+    (data.statut === 'en_traitement' ? ' · en cours de traitement' : '') + retraitTxt + couperTxt;
+  const lignesHtml = (data.lignes||[]).map(l=>{
+    let t = `<div style="display:flex; justify-content:space-between; padding:3px 0; font-weight:600;"><span>${l.nom}</span><span>${fmt(l.prix + (l.supps||[]).reduce((s,x)=>s+x.prix,0))}</span></div>`;
+    (l.supps||[]).forEach(s=> t += `<div style="padding-left:12px; color:var(--gris); font-size:12px;">+ ${s.nom}</div>`);
+    (l.notes||[]).forEach(n=> t += `<div style="padding-left:12px; color:var(--gris); font-size:12px;">– ${n}</div>`);
+    return t;
+  }).join('');
+  document.getElementById('detailLignes').innerHTML = lignesHtml || '<div class="classement-empty">Aucun article</div>';
+  document.getElementById('detailTotal').textContent = fmt(cartTotal(data.lignes).ttc);
+  updateDetailPaiementChips();
+  document.getElementById('commandeDetailOverlay').classList.add('show');
+}
+// Puces de paiement de l'overlay détail : permet de choisir/confirmer le mode de paiement au
+// moment de l'encaissement (reprend le choix fait dans le panier si déjà sélectionné là-bas).
+// Même limite que dans le panier : pas d'envoi automatique au TPE possible avec ce terminal,
+// la puce "Carte" affiche juste le montant à saisir à la main.
+function updateDetailPaiementChips(){
+  const ce = document.getElementById('detailChipEspece'), cc = document.getElementById('detailChipCarte');
+  const mp = detailCommande ? detailCommande.data.modePaiement : null;
+  if(ce) ce.classList.toggle('active', mp === 'espece');
+  if(cc) cc.classList.toggle('active', mp === 'carte');
+}
+document.getElementById('detailChipEspece').onclick = ()=>{
+  if(!detailCommande) return;
+  detailCommande.data.modePaiement = (detailCommande.data.modePaiement === 'espece') ? null : 'espece';
+  updateDetailPaiementChips();
+  if(detailCommande.data.modePaiement === 'espece') toast('💶 Paiement espèces — ' + fmt(cartTotal(detailCommande.data.lignes).ttc));
+};
+document.getElementById('detailChipCarte').onclick = ()=>{
+  if(!detailCommande) return;
+  detailCommande.data.modePaiement = (detailCommande.data.modePaiement === 'carte') ? null : 'carte';
+  updateDetailPaiementChips();
+  if(detailCommande.data.modePaiement === 'carte') toast('💳 Carte — à saisir sur le TPE : ' + fmt(cartTotal(detailCommande.data.lignes).ttc), 4000);
+};
+function finaliserCommandeFile(action){
+  if(!detailCommande) return;
+  const { id, data } = detailCommande;
+  enregistrerVentesPourLignes(data.lignes);
+  if(action === 'facture') imprimerFacture(data);
+  else if(action === 'detaille') imprimerTicket(data);
+  if(fbOk && fbDb){
+    fbDb.collection('commandes').doc(id).update({statut:'encaissee', modePaiement: data.modePaiement || null}).catch(()=>{});
+  }
+  document.getElementById('commandeDetailOverlay').classList.remove('show');
+  detailCommande = null;
+  toast(action === 'facture' ? 'Facture encaissée ✅' : 'Vente encaissée ✅');
+}
+document.getElementById('btnDetailEncaisser').onclick = ()=> finaliserCommandeFile('encaisser');
+document.getElementById('btnDetailDetaille').onclick = ()=> finaliserCommandeFile('detaille');
+document.getElementById('btnDetailFacture').onclick = ()=> finaliserCommandeFile('facture');
+document.getElementById('btnDetailAjouter').onclick = ()=>{
+  if(!detailCommande) return;
+  const { id, data } = detailCommande;
+  document.getElementById('commandeDetailOverlay').classList.remove('show');
+  detailCommande = null;
+  chargerCommande(id, data);
+};
+document.getElementById('btnDetailClose').onclick = ()=>{
+  document.getElementById('commandeDetailOverlay').classList.remove('show');
+  detailCommande = null;
+};
+
+/* ===================== SYNCHRO TEMPS REEL (Firebase) ===================== */
+function chargerCommande(id, data){
+  const doCharge = () => {
+    state.mode = data.mode;
+    state.cart = data.lignes.map(l => ({...l, id: nextLineId++}));
+    state.selectedLine = null;
+    state.activeFirestoreId = id;
+    state.table = data.table || null;
+    state.heureRetrait = data.heureRetrait || null;
+    state.modePaiement = data.modePaiement || null;
+    state.couperCommande = !!data.couperCommande;
+    // on mémorise les lignes déjà envoyées en cuisine : tout ce qui sera ajouté après
+    // ce chargement est considéré comme "nouveau" et sera seul réimprimé en cuisine
+    state.lignesEnvoyees = state.cart.map(l => l.id);
+    document.querySelectorAll('#modeToggle button').forEach(b=>{
+      b.classList.toggle('active', b.dataset.mode === state.mode);
+    });
+    document.getElementById('cartModeLbl').textContent = state.mode === 'surPlace' ? 'Sur place' : 'À emporter';
+    state.currentCat = null;
+    renderCats(); renderItems(); renderCart(); save(); updateTableBtn(); updateRetraitBtn();
+    document.querySelectorAll('#tabs button').forEach(b=>b.classList.remove('active'));
+    document.querySelector('#tabs button[data-view="commande"]').classList.add('active');
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    document.getElementById('view-commande').classList.add('active');
+    if(fbDb) fbDb.collection('commandes').doc(id).update({statut:'en_traitement'}).catch(()=>{});
+  };
+  if(state.cart.length){
+    askConfirm('Remplacer la commande', 'Remplacer la commande en cours par celle-ci ?', doCharge);
+  } else doCharge();
+}
+
+if(fbOk && fbDb){
+  fbDb.collection('commandes')
+    .where('statut','in',['recue','en_traitement'])
+    .onSnapshot(snap=>{
+      const statusEl = document.getElementById('syncStatus');
+      statusEl.textContent = '● synchro active';
+      statusEl.className = 'on';
+      const listSP = document.getElementById('fileListSurPlace');
+      const listEM = document.getElementById('fileListEmporter');
+      const badge = document.getElementById('fileBadge');
+      const docs = [];
+      snap.forEach(doc => docs.push({id: doc.id, data: doc.data()}));
+      docs.sort((a,b)=> (a.data.creeLe?.seconds||0) - (b.data.creeLe?.seconds||0));
+      commandesActives = docs;
+      badge.textContent = docs.filter(d=>d.data.statut==='recue').length || '';
+      const renderCol = (list, filtered) => {
+        if(!filtered.length){ list.innerHTML = '<div class="classement-empty">Aucune commande en attente.</div>'; return; }
+        list.innerHTML = '';
+        filtered.forEach(({id,data})=>{
+          const total = (data.lignes||[]).reduce((s,l)=> s + l.prix + (l.supps||[]).reduce((ss,x)=>ss+x.prix,0), 0);
+          const resume = (data.lignes||[]).map(l=>l.nom).join(', ');
+          const tableLbl = data.table ? ` — Table ${data.table.num}` : '';
+          const retraitLbl = data.heureRetrait ? ` 🕐 Retrait ${data.heureRetrait}` : '';
+          const paieLbl = data.modePaiement === 'carte' ? ' 💳' : (data.modePaiement === 'espece' ? ' 💶' : '');
+          const couperLbl = data.couperCommande ? ' ✂️' : '';
+          const el = document.createElement('div');
+          el.className = 'file-card' + (data.statut==='en_traitement' ? ' traitement' : '');
+          el.innerHTML = `<div class="fh"><span>${tableLbl || (data.mode==='surPlace'?'Sur place':'À emporter')}${retraitLbl}${paieLbl}${couperLbl} — ${fmt(total)}</span><span>${data.envoyePar==='serveur'?'📱 serveur':'🖥️ iPad'}</span></div>
+            <div class="fi">${resume}</div>
+            <div class="fs">${data.statut==='en_traitement' ? 'En cours de traitement' : 'Nouvelle — appuie pour voir'}</div>`;
+          el.onclick = ()=> ouvrirDetailCommande(id, data);
+          list.appendChild(el);
+        });
+      };
+      renderCol(listSP, docs.filter(d=>d.data.mode==='surPlace'));
+      renderCol(listEM, docs.filter(d=>d.data.mode==='emporter'));
+      if(document.getElementById('view-salle').classList.contains('active')) renderSalle();
+    }, err=>{
+      console.error(err);
+      const statusEl = document.getElementById('syncStatus');
+      statusEl.textContent = '● erreur synchro';
+      statusEl.className = 'off';
+    });
+} else {
+  document.getElementById('syncStatus').className = 'off';
+}
+
+// synchro du plan de salle : la tablette écrit, tous les appareils (iPad + téléphones des
+// serveurs) reçoivent les mises à jour en direct et réaffichent le plan
+if(fbOk && fbDb){
+  fbDb.collection('config').doc('plan_salle').onSnapshot(doc=>{
+    if(doc.exists){
+      const data = doc.data();
+      localStorage.setItem('pa2_tables', JSON.stringify(data.tables || []));
+    }
+    if(document.getElementById('view-salle').classList.contains('active')) renderSalle();
+  }, err=>{ console.error('Erreur synchro plan de salle', err); });
+}
+
+/* ===================== RESERVATIONS ===================== */
+// Chaque réservation est un document Firestore indépendant (comme les commandes), visible et
+// modifiable depuis tous les appareils en temps réel. { nom, tel, date:'AAAA-MM-JJ', heure:'HHhMM', couverts, creeLe }
+let reservationsActives = [];
+let resaOngletActif = 'jour';
+let resaEnEdition = null; // null = nouvelle réservation, sinon id du doc en cours d'édition
+
+function dateAujourdhui(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function formatDateAffichage(iso){
+  if(!iso) return '';
+  const [y,m,d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+function renderReservations(){
+  const list = document.getElementById('resaList');
+  const auj = dateAujourdhui();
+  let filtered;
+  if(resaOngletActif === 'jour') filtered = reservationsActives.filter(r => r.data.date === auj);
+  else if(resaOngletActif === 'avenir') filtered = reservationsActives.filter(r => r.data.date > auj);
+  else filtered = reservationsActives.filter(r => r.data.date < auj);
+  filtered.sort((a,b)=>{
+    const da = a.data.date + (a.data.heure||'').padStart(5,'0');
+    const db = b.data.date + (b.data.heure||'').padStart(5,'0');
+    return resaOngletActif === 'passees' ? db.localeCompare(da) : da.localeCompare(db);
+  });
+  if(!filtered.length){ list.innerHTML = '<div class="classement-empty">Aucune réservation.</div>'; return; }
+  list.innerHTML = '';
+  filtered.forEach(({id,data})=>{
+    const el = document.createElement('div');
+    el.className = 'file-card';
+    const dateLbl = resaOngletActif !== 'jour' ? formatDateAffichage(data.date) + ' — ' : '';
+    el.innerHTML = `<div class="fh"><span>${dateLbl}${data.heure ? '🕐 ' + data.heure : 'Heure non précisée'}</span><span>👥 ${data.couverts || '?'}</span></div>
+      <div class="fi">${data.nom || 'Sans nom'}${data.tel ? ' · ' + data.tel : ''}</div>`;
+    el.onclick = ()=> ouvrirResaOverlay(id, data);
+    list.appendChild(el);
+  });
+}
+
+document.getElementById('resaToggle').addEventListener('click', e=>{
+  const btn = e.target.closest('button[data-resa]');
+  if(!btn) return;
+  resaOngletActif = btn.dataset.resa;
+  document.querySelectorAll('#resaToggle button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderReservations();
+});
+
+function ouvrirResaOverlay(id, data){
+  resaEnEdition = id || null;
+  document.getElementById('resaTitle').textContent = id ? 'Modifier la réservation' : 'Nouvelle réservation';
+  document.getElementById('resaNom').value = data ? (data.nom||'') : '';
+  document.getElementById('resaTel').value = data ? (data.tel||'') : '';
+  document.getElementById('resaDate').value = data ? (data.date||'') : dateAujourdhui();
+  document.getElementById('resaHeure').value = data && data.heure ? data.heure.replace('h','') : '';
+  document.getElementById('resaCouverts').value = data ? (data.couverts||'') : '';
+  document.getElementById('resaDelete').style.display = id ? 'block' : 'none';
+  document.getElementById('resaOverlay').classList.add('show');
+}
+document.getElementById('btnNouvelleResa').onclick = ()=> ouvrirResaOverlay(null, null);
+document.getElementById('resaHeure').addEventListener('input', (e)=>{ e.target.value = formatHeureMasque(e.target.value); });
+document.getElementById('resaCancel').onclick = ()=>{
+  document.getElementById('resaOverlay').classList.remove('show');
+  resaEnEdition = null;
+};
+document.getElementById('resaConfirm').onclick = ()=>{
+  const nom = document.getElementById('resaNom').value.trim();
+  const tel = document.getElementById('resaTel').value.trim();
+  const date = document.getElementById('resaDate').value;
+  const heureRaw = formatHeureMasque(document.getElementById('resaHeure').value);
+  const couverts = parseInt(document.getElementById('resaCouverts').value, 10);
+  if(!nom){ toast('Indique le nom du client'); return; }
+  if(!date){ toast('Indique la date'); return; }
+  if(heureRaw && !/^\d{2}h\d{2}$/.test(heureRaw)){ toast('Heure incomplète (4 chiffres, ex: 1930)'); return; }
+  if(!couverts || couverts < 1){ toast('Indique le nombre de couverts'); return; }
+  if(!(fbOk && fbDb)){ toast('⚠️ Pas de synchro — impossible d’enregistrer la réservation'); return; }
+  const payload = { nom, tel: tel || null, date, heure: heureRaw || null, couverts };
+  const idEnCours = resaEnEdition;
+  // la fenêtre se ferme tout de suite (pas besoin d'attendre la réponse du serveur) ;
+  // la synchro se fait en arrière-plan, avec un toast d'erreur si jamais ça échoue
+  document.getElementById('resaOverlay').classList.remove('show');
+  resaEnEdition = null;
+  toast(idEnCours ? 'Réservation mise à jour ✅' : 'Réservation enregistrée ✅');
+  const onErr = (e)=>{
+    console.error(e);
+    toast('⚠️ Échec de l’enregistrement (' + (e && e.code ? e.code : 'erreur') + ') — réessaie');
+  };
+  if(idEnCours){
+    fbDb.collection('reservations').doc(idEnCours).update(payload).catch(onErr);
+  } else {
+    fbDb.collection('reservations').add({...payload, creeLe: firebase.firestore.FieldValue.serverTimestamp()}).catch(onErr);
+  }
+};
+document.getElementById('resaDelete').onclick = ()=>{
+  if(!resaEnEdition) return;
+  const id = resaEnEdition;
+  askConfirm('Supprimer la réservation', 'Supprimer définitivement cette réservation ?', ()=>{
+    document.getElementById('resaOverlay').classList.remove('show');
+    resaEnEdition = null;
+    toast('Réservation supprimée');
+    fbDb.collection('reservations').doc(id).delete().catch(e=>{
+      console.error(e);
+      toast('⚠️ Échec de la suppression (' + (e && e.code ? e.code : 'erreur') + ') — réessaie');
+    });
+  });
+};
+
+if(fbOk && fbDb){
+  fbDb.collection('reservations').onSnapshot(snap=>{
+    const docs = [];
+    snap.forEach(doc => docs.push({id: doc.id, data: doc.data()}));
+    reservationsActives = docs;
+    renderReservations();
+  }, err=>{ console.error('Erreur synchro réservations', err); });
+}
+
+/* ===================== CLASSEMENT (ventes) ===================== */
+function getVentes(){
+  return JSON.parse(localStorage.getItem('pa2_ventes') || '{"pizzas":{},"supplements":{}}');
+}
+function saveVentes(v){ localStorage.setItem('pa2_ventes', JSON.stringify(v)); }
+
+function estUnePizza(nom){
+  const menu = getMenu();
+  for(const mode of ['surPlace','emporter']){
+    const cats = menu[mode];
+    for(const c of ["Pizzas Classiques","Pizzas Blanches","Pizzas Exclusives","Pizzas Spéciales","Calzones","Focacce"]){
+      if(cats[c] && cats[c].some(([n])=>n===nom)) return true;
+    }
+  }
+  return false;
+}
+
+function renderClassement(){
+  const v = getVentes();
+  const renderList = (obj, elId) => {
+    const el = document.getElementById(elId);
+    const arr = Object.entries(obj).sort((a,b)=>b[1]-a[1]);
+    if(!arr.length){ el.innerHTML = '<div class="classement-empty">Pas encore de ventes enregistrées.</div>'; return; }
+    el.innerHTML = arr.map(([nom,qte],i)=>`<div class="rank-row"><div class="pos">${i+1}</div><div class="nom">${nom}</div><div class="qte">${qte}</div></div>`).join('');
+  };
+  renderList(v.pizzas, 'rankPizzas');
+  renderList(v.supplements, 'rankSupps');
+}
+
+document.getElementById('btnResetClassement').onclick = ()=>{
+  askConfirm('Réinitialiser le classement', 'Remettre le classement à zéro ?', ()=>{
+    saveVentes({pizzas:{},supplements:{}});
+    renderClassement();
+  });
+};
+
+/* ===================== TICKET ===================== */
+function buildLignesText(cart){
+  let lignes = '';
+  (cart||[]).forEach(l=>{
+    lignes += `${l.nom} .......... ${fmt(l.prix)}\n`;
+    (l.supps||[]).forEach(s=> lignes += `  + ${s.nom} .......... ${fmt(s.prix)}\n`);
+    (l.notes||[]).forEach(n=> lignes += `  - ${n}\n`);
+    const badges = [l.cuisson==='bien'?'bien cuite':'', l.cuisson==='pastrop'?'pas trop cuite':''].filter(Boolean).join(', ');
+    if(badges) lignes += `  (${badges})\n`;
+  });
+  return lignes;
+}
+// les fonctions d'impression acceptent soit un objet commande venant de Firestore
+// ({mode, lignes, table, heureRetrait}), soit rien (auto : utilise le panier en cours "state")
+function enteteModeTicket(order){
+  const o = order || state;
+  const lignes = o.lignes || o.cart;
+  let s = o.mode === 'surPlace' ? 'SUR PLACE' + (o.table ? ' - TABLE ' + o.table.num : '') : 'A EMPORTER';
+  if(o.mode === 'emporter' && o.heureRetrait) s += ' - RETRAIT ' + o.heureRetrait;
+  return s;
+}
+function toastImprimante(cat){
+  const im = getImprimantes();
+  if(im[cat] && im[cat].length) toast('🖨️ Choisis "' + im[cat].join('" ou "') + '" dans la fenêtre d’impression');
+}
+function libellePaiement(o){
+  if(o.modePaiement === 'carte') return 'Carte bancaire';
+  if(o.modePaiement === 'espece') return 'Espèces';
+  return '';
+}
+function imprimerTicket(order){
+  const o = order || state;
+  const cart = o.lignes || o.cart;
+  const reg = JSON.parse(localStorage.getItem('pa2_reglages') || '{}');
+  const { ttc } = cartTotal(cart);
+  const lignes = buildLignesText(cart);
+  const lp = libellePaiement(o);
+  const el = document.getElementById('ticket-print');
+  el.innerHTML = `<pre>${reg.nom || "Pizz'Amore 2.0"}
+${reg.adresse || "Messery"}
+${reg.tel || ''}
+--------------------------------
+${enteteModeTicket(o)}
+--------------------------------
+${lignes}--------------------------------
+Total à payer : ${fmt(ttc)}
+${lp ? 'Paiement : ' + lp + '\n' : ''}--------------------------------
+${new Date().toLocaleString('fr-FR')}
+Merci et a bientot !
+</pre>`;
+  toastImprimante('caisse');
+  window.print();
+}
+function imprimerFacture(order){
+  const o = order || state;
+  const cart = o.lignes || o.cart;
+  const reg = JSON.parse(localStorage.getItem('pa2_reglages') || '{}');
+  const { ht, ttc } = cartTotal(cart);
+  const lignes = buildLignesText(cart);
+  const lp = libellePaiement(o);
+  const el = document.getElementById('ticket-print');
+  el.innerHTML = `<pre>FACTURE
+${reg.nom || "Pizz'Amore 2.0"}
+${reg.adresse || "Messery"}
+${reg.tel || ''}
+SIRET: ${reg.siret || 'non renseigné'}
+--------------------------------
+${enteteModeTicket(o)}
+--------------------------------
+${lignes}--------------------------------
+Total HT   : ${fmt(ht)}
+Total TTC  : ${fmt(ttc)}
+${lp ? 'Paiement : ' + lp + '\n' : ''}--------------------------------
+${new Date().toLocaleString('fr-FR')}
+Merci et a bientot !
+</pre>`;
+  toastImprimante('caisse');
+  window.print();
+}
+function imprimerCommandeCuisine(order){
+  const o = order || state;
+  const cart = o.lignes || o.cart;
+  const lignes = buildLignesText(cart);
+  const el = document.getElementById('ticket-print');
+  el.innerHTML = `<pre>COMMANDE CUISINE
+--------------------------------
+${enteteModeTicket(o)}
+--------------------------------
+${o.couperCommande ? '✂️ TOUT COUPER\n--------------------------------\n' : ''}${lignes}--------------------------------
+${new Date().toLocaleString('fr-FR')}
+</pre>`;
+  toastImprimante('cuisine');
+  window.print();
+}
+
+/* ===================== PLAN DE SALLE ===================== */
+// seule la tablette (rôle "ipad") peut modifier le plan ; les serveurs le voient en lecture
+// seule, et toute modification faite depuis l'iPad se synchronise sur leurs téléphones via Firestore
+function isServeur(){ return (localStorage.getItem('pa2_role') || 'ipad') === 'serveur'; }
+function getTables(){ return JSON.parse(localStorage.getItem('pa2_tables') || '[]'); }
+function saveTables(tables){
+  localStorage.setItem('pa2_tables', JSON.stringify(tables));
+  if(isServeur()) return; // sécurité : un serveur ne doit jamais pousser de modif du plan
+  if(fbOk && fbDb){
+    fbDb.collection('config').doc('plan_salle').set({tables}).catch(e=>{
+      console.error(e);
+      toast('⚠️ Synchro du plan indisponible (' + (e && e.code ? e.code : 'erreur') + ')');
+    });
+  }
+}
+function updateSalleToolbarVisibility(){
+  const serveur = isServeur();
+  document.getElementById('salleToolbar').style.display = serveur ? 'none' : 'flex';
+  document.getElementById('salleNoteServeur').style.display = serveur ? 'block' : 'none';
+}
+let tableSeq = 1;
+
+function tableSize(t){
+  if(t.type === 'fusion') return { w: t.w, h: t.h };
+  const size = Math.max(70, Math.min(130, 55 + t.couverts*6));
+  if(t.type === 'ronde' || t.type === 'carree') return { w: size, h: size };
+  return { w: size+30, h: size-20 }; // rect (rectangulaire allongée)
+}
+
+function renderSalle(){
+  updateSalleToolbarVisibility();
+  const room = document.getElementById('salleRoom');
+  room.innerHTML = '';
+  const tables = getTables();
+  const occ = getOccupiedTableIds();
+  const arrivals = getTableArrivalTimes();
+  tableSeq = tables.reduce((m,t)=>Math.max(m,t.num||0),0) + 1;
+  tables.forEach(t => room.appendChild(buildTableEl(t, occ.has(t.id), arrivals[t.id])));
+}
+
+function buildTableEl(t, occupied, heureArrivee){
+  const serveur = isServeur(); // le plan de salle n'est modifiable que depuis la tablette (iPad)
+  const el = document.createElement('div');
+  const shapeClass = t.type === 'ronde' ? 'ronde' : 'rect'; // carrée et fusion utilisent la forme "rect" (coins arrondis) avec leurs propres dimensions
+  el.className = 'table-el ' + shapeClass + (occupied ? ' occupee' : '');
+  const sz = tableSize(t);
+  el.style.width = sz.w+'px'; el.style.height = sz.h+'px';
+  el.style.left = t.x + 'px';
+  el.style.top = t.y + 'px';
+  const label = t.type === 'fusion' ? `Table ${t.num} (fusionnée)` : `Table ${t.num}`;
+  const arriveeHtml = (occupied && heureArrivee) ? `<div class="tarrivee">🕐 ${formatHeure(heureArrivee)}</div>` : '';
+  const splitHtml = (t.type === 'fusion' && !occupied && !serveur) ? `<div class="tsplit" title="Séparer les tables">⇆</div>` : '';
+  const delHtml = serveur ? '' : '<div class="tdel">✕</div>';
+  el.innerHTML = `${arriveeHtml}<div class="tnum">${label}</div><div class="tcov">${t.couverts} couv.</div><div class="tstatut">${occupied ? '● Occupée' : '● Libre'}</div>${splitHtml}${delHtml}`;
+  const delBtn = el.querySelector('.tdel');
+  if(delBtn){
+    delBtn.onclick = (e)=>{
+      e.stopPropagation();
+      let tables = getTables().filter(x=>x.id!==t.id);
+      saveTables(tables); renderSalle();
+    };
+  }
+  const splitBtn = el.querySelector('.tsplit');
+  if(splitBtn){
+    splitBtn.onclick = (e)=>{
+      e.stopPropagation();
+      askConfirm('Séparer les tables', `Séparer la table ${t.num} en ses deux tables d'origine ?`, ()=>{
+        unmergeTable(t.id);
+      });
+    };
+  }
+  if(occupied) el.style.cursor = 'pointer';
+  // drag (souris + tactile) — désactivé pour les serveurs, seule la tablette peut réorganiser le plan
+  let dragging=false, offX=0, offY=0, startX=0, startY=0, moved=false;
+  const room = ()=>document.getElementById('salleRoom');
+  const start = (x,y)=>{
+    dragging=true; moved=false; startX=x; startY=y;
+    const r = el.getBoundingClientRect(), rr = room().getBoundingClientRect();
+    offX = x - r.left + rr.left; offY = y - r.top + rr.top;
+    el.style.cursor='grabbing';
+  };
+  const end = ()=>{
+    if(!dragging) return;
+    dragging=false; el.style.cursor = occupied ? 'pointer' : 'grab';
+    const left = parseFloat(el.style.left), top = parseFloat(el.style.top);
+    let tables = getTables();
+    const idx = tables.findIndex(x=>x.id===t.id);
+    if(idx>-1){ tables[idx].x = left; tables[idx].y = top; saveTables(tables); }
+    checkMergeFor(t.id);
+  };
+  if(!serveur){
+    el.addEventListener('pointerdown', e=>{
+      if(e.target.closest('.tdel') || e.target.closest('.tsplit')) return;
+      el.setPointerCapture(e.pointerId); start(e.clientX,e.clientY);
+    });
+    el.addEventListener('pointermove', e=>{
+      if(!dragging) return;
+      if(Math.abs(e.clientX-startX) > 4 || Math.abs(e.clientY-startY) > 4) moved = true;
+      const rr = room().getBoundingClientRect();
+      let left = e.clientX - offX; let top = e.clientY - offY;
+      left = Math.max(0, Math.min(rr.width - el.offsetWidth, left));
+      top = Math.max(0, Math.min(rr.height - el.offsetHeight, top));
+      el.style.left = left+'px'; el.style.top = top+'px';
+    });
+    el.addEventListener('pointerup', end);
+    el.addEventListener('pointercancel', end);
+  } else {
+    el.style.cursor = occupied ? 'pointer' : 'default';
+  }
+  // tap (sans glisser) sur une table occupée : ouvre la commande en cours de cette table
+  // (ça, en revanche, un serveur peut le faire : ce n'est pas modifier le plan)
+  if(occupied){
+    el.addEventListener('click', e=>{
+      if(e.target.closest('.tdel') || e.target.closest('.tsplit') || moved) return;
+      const match = commandesActives.find(c => c.data.table && c.data.table.id === t.id);
+      if(match) ouvrirDetailCommande(match.id, match.data);
+      else toast('Commande introuvable pour cette table (vérifie la synchro)');
+    });
+  }
+  return el;
+}
+
+/* ---- Fusion de tables collées (ex: deux carrées poussées l'une contre l'autre) ---- */
+function rectsClose(r1, r2, margin){
+  return !(r1.x+r1.w+margin < r2.x || r2.x+r2.w+margin < r1.x || r1.y+r1.h+margin < r2.y || r2.y+r2.h+margin < r1.y);
+}
+function checkMergeFor(movedId){
+  const tables = getTables();
+  const moved = tables.find(x=>x.id===movedId);
+  if(!moved) return;
+  const occ = getOccupiedTableIds();
+  if(occ.has(moved.id)){ return; }
+  const mRect = {x:moved.x, y:moved.y, ...tableSize(moved)};
+  for(const other of tables){
+    if(other.id === moved.id || occ.has(other.id)) continue;
+    const oRect = {x:other.x, y:other.y, ...tableSize(other)};
+    if(rectsClose(mRect, oRect, 40)){
+      askConfirm('Coller les tables ?', `Table ${moved.num} et Table ${other.num} vont former une seule table de ${moved.couverts+other.couverts} couverts.`, ()=>{
+        mergeTables(moved, other);
+      });
+      return;
+    }
+  }
+}
+function mergeTables(a, b){
+  let tables = getTables();
+  const asz = tableSize(a), bsz = tableSize(b);
+  const ux = Math.min(a.x, b.x), uy = Math.min(a.y, b.y);
+  const ur = Math.max(a.x+asz.w, b.x+bsz.w), ub = Math.max(a.y+asz.h, b.y+bsz.h);
+  // on garde les deux tables d'origine (position, type, couverts, numéro) pour pouvoir les réséparer plus tard
+  const merged = {id: Date.now(), type:'fusion', num: Math.min(a.num,b.num), couverts: a.couverts+b.couverts, x:ux, y:uy, w:ur-ux, h:ub-uy,
+    parts: [
+      {id:a.id, type:a.type, num:a.num, couverts:a.couverts, x:a.x, y:a.y},
+      {id:b.id, type:b.type, num:b.num, couverts:b.couverts, x:b.x, y:b.y}
+    ]
+  };
+  tables = tables.filter(x=>x.id!==a.id && x.id!==b.id);
+  tables.push(merged);
+  saveTables(tables);
+  renderSalle();
+  toast(`Tables collées : Table ${merged.num} — ${merged.couverts} couverts`);
+}
+function unmergeTable(fusionId){
+  let tables = getTables();
+  const idx = tables.findIndex(x=>x.id===fusionId);
+  if(idx === -1) return;
+  const fusion = tables[idx];
+  if(fusion.type !== 'fusion'){ return; }
+  tables.splice(idx,1);
+  if(fusion.parts && fusion.parts.length === 2){
+    // on restitue les deux tables d'origine telles qu'elles étaient avant la fusion
+    fusion.parts.forEach(p=>{
+      // si l'id d'origine existe déjà (improbable) on lui redonne un id unique
+      const newId = tables.some(x=>x.id===p.id) ? Date.now()+Math.floor(Math.random()*1000) : p.id;
+      tables.push({id:newId, type:p.type, num:p.num, couverts:p.couverts, x:p.x, y:p.y});
+    });
+  } else {
+    // table fusionnée créée avant l'ajout de cette fonctionnalité (pas d'info d'origine à restituer) :
+    // on la sépare quand même "au mieux" en deux tables carrées côte à côte, couverts partagés
+    tableSeq = tables.reduce((m,t)=>Math.max(m,t.num||0),0) + 1;
+    const half = Math.max(1, Math.round(fusion.couverts/2));
+    const reste = Math.max(1, fusion.couverts - half);
+    const sz = tableSize({type:'carree', couverts:half});
+    tables.push({id: Date.now(), type:'carree', num:fusion.num, couverts:half, x:fusion.x, y:fusion.y});
+    tables.push({id: Date.now()+1, type:'carree', num:tableSeq++, couverts:reste, x:fusion.x+sz.w+16, y:fusion.y});
+  }
+  saveTables(tables);
+  renderSalle();
+  toast('Tables séparées');
+}
+
+function nextSpot(){
+  const n = getTables().length;
+  const col = n % 5, row = Math.floor(n/5);
+  return { x: 20 + col*150, y: 20 + row*140 };
+}
+function ajouterTable(type, titre, placeholder){
+  if(isServeur()) return; // seule la tablette peut modifier le plan
+  askNumber('Numéro de la table', 'ex: ' + tableSeq, (numChoisi)=>{
+    const num = Math.round(numChoisi);
+    if(getTables().some(t => t.num === num)){
+      toast(`La table n°${num} existe déjà`);
+      return;
+    }
+    askNumber(titre, placeholder, (n)=>{
+      const tables = getTables();
+      const spot = nextSpot();
+      tables.push({id: Date.now(), type, num, couverts: Math.round(n), x: spot.x, y: spot.y});
+      saveTables(tables); renderSalle();
+    });
+  });
+}
+document.getElementById('btnTableRonde').onclick = ()=> ajouterTable('ronde', 'Table ronde — nombre de couverts', 'ex: 4');
+document.getElementById('btnTableCarree').onclick = ()=> ajouterTable('carree', 'Table carrée — nombre de couverts', 'ex: 2');
+document.getElementById('btnTableRect').onclick = ()=> ajouterTable('rect', 'Table rectangulaire — nombre de couverts', 'ex: 6');
+document.getElementById('btnResetSalle').onclick = ()=>{
+  if(isServeur()) return; // seule la tablette peut modifier le plan
+  askConfirm('Réinitialiser le plan', 'Supprimer toutes les tables du plan de salle ?', ()=>{
+    saveTables([]); renderSalle();
+  });
+};
+
+/* ===================== REGLAGES ===================== */
+function loadReglages(){
+  const reg = JSON.parse(localStorage.getItem('pa2_reglages') || '{}');
+  document.getElementById('regNom').value = reg.nom || "Pizz'Amore 2.0";
+  document.getElementById('regAdresse').value = reg.adresse || "4 Rue du Véret, 74140 Messery";
+  document.getElementById('regTel').value = reg.tel || '';
+  document.getElementById('regSiret').value = reg.siret || '';
+  document.getElementById('regRole').value = localStorage.getItem('pa2_role') || 'ipad';
+}
+function getReglages(){ return JSON.parse(localStorage.getItem('pa2_reglages') || '{}'); }
+document.getElementById('btnSaveReglages').onclick = ()=>{
+  const reg = {
+    nom: document.getElementById('regNom').value.trim(),
+    adresse: document.getElementById('regAdresse').value.trim(),
+    tel: document.getElementById('regTel').value.trim(),
+    siret: document.getElementById('regSiret').value.trim()
+  };
+  localStorage.setItem('pa2_reglages', JSON.stringify(reg));
+  localStorage.setItem('pa2_role', document.getElementById('regRole').value);
+  updateSalleToolbarVisibility();
+  toast('Réglages enregistrés ✅');
+};
+
+/* ===================== IMPRIMANTES (Réglages) ===================== */
+function getImprimantes(){
+  const imp = JSON.parse(localStorage.getItem('pa2_imprimantes') || 'null');
+  if(imp) return imp;
+  // migration depuis l'ancien format à une seule imprimante par catégorie
+  const reg = getReglages();
+  const migre = { caisse: reg.impTicket ? [reg.impTicket] : [], cuisine: reg.impCuisine ? [reg.impCuisine] : [] };
+  setImprimantes(migre);
+  return migre;
+}
+function setImprimantes(imp){ localStorage.setItem('pa2_imprimantes', JSON.stringify(imp)); }
+function renderAdmImprimantes(){
+  const imp = getImprimantes();
+  const renderListe = (wrapId, cat) => {
+    const wrap = document.getElementById(wrapId);
+    wrap.innerHTML = '';
+    if(!imp[cat].length){ wrap.innerHTML = '<div class="classement-empty" style="padding:8px 0;">Aucune imprimante ajoutée.</div>'; return; }
+    imp[cat].forEach((nom,i)=>{
+      const row = document.createElement('div');
+      row.className = 'adm-supp-row';
+      row.innerHTML = `<input type="text" value="${nom}" data-imp-nom="${cat}|${i}" style="flex:1;">
+        <span class="adm-del" data-imp-del="${cat}|${i}">✕</span>`;
+      wrap.appendChild(row);
+    });
+    wrap.querySelectorAll('[data-imp-nom]').forEach(inp=>{
+      inp.onchange = ()=>{
+        const [c,i] = inp.dataset.impNom.split('|');
+        const im = getImprimantes();
+        im[c][i] = inp.value.trim() || im[c][i];
+        setImprimantes(im); renderAdmImprimantes();
+      };
+    });
+    wrap.querySelectorAll('[data-imp-del]').forEach(el=>{
+      el.onclick = ()=>{
+        const [c,i] = el.dataset.impDel.split('|');
+        const im0 = getImprimantes();
+        askConfirm('Supprimer', `Supprimer l'imprimante "${im0[c][i]}" ?`, ()=>{
+          const im = getImprimantes();
+          im[c].splice(i,1); setImprimantes(im); renderAdmImprimantes();
+        });
+      };
+    });
+  };
+  renderListe('admImpCaisseList', 'caisse');
+  renderListe('admImpCuisineList', 'cuisine');
+}
+document.getElementById('admImpCaisseAdd').onclick = ()=>{
+  askText('Nom de l’imprimante caisse', 'ex: Imprimante caisse', (nom)=>{
+    if(!nom.trim()) return;
+    const im = getImprimantes();
+    im.caisse.push(nom.trim());
+    setImprimantes(im); renderAdmImprimantes();
+  });
+};
+document.getElementById('admImpCuisineAdd').onclick = ()=>{
+  askText('Nom de l’imprimante cuisine', 'ex: Imprimante cuisine', (nom)=>{
+    if(!nom.trim()) return;
+    const im = getImprimantes();
+    im.cuisine.push(nom.trim());
+    setImprimantes(im); renderAdmImprimantes();
+  });
+};
+
+/* ===================== ADMIN SUPPLÉMENTS (Réglages) ===================== */
+function renderAdmSupp(){
+  const wrap = document.getElementById('admSuppList');
+  const supps = getSupplements();
+  const sorted = supps.map((s,i)=>({...{nom:s[0],prix:s[1]}, idx:i})).sort((a,b)=>a.nom.localeCompare(b.nom,'fr'));
+  wrap.innerHTML = '';
+  sorted.forEach(({nom,prix,idx})=>{
+    const row = document.createElement('div');
+    row.className = 'adm-supp-row';
+    row.innerHTML = `<input type="text" value="${nom}" data-supp-nom="${idx}">
+      <input type="text" inputmode="decimal" value="${prix}" data-supp-prix="${idx}">
+      <span class="adm-del" data-supp-del="${idx}">✕</span>`;
+    wrap.appendChild(row);
+  });
+  wrap.querySelectorAll('[data-supp-nom]').forEach(inp=>{
+    inp.onchange = ()=>{
+      const s = getSupplements(); const i = parseInt(inp.dataset.suppNom);
+      s[i][0] = inp.value.trim() || s[i][0];
+      setSupplements(s); renderAdmSupp(); renderItems();
+    };
+  });
+  wrap.querySelectorAll('[data-supp-prix]').forEach(inp=>{
+    inp.onchange = ()=>{
+      const s = getSupplements(); const i = parseInt(inp.dataset.suppPrix);
+      const v = parseFloat(inp.value.replace(',','.'));
+      if(!isNaN(v)) s[i][1] = v;
+      setSupplements(s); renderAdmSupp(); renderItems();
+    };
+  });
+  wrap.querySelectorAll('[data-supp-del]').forEach(el=>{
+    el.onclick = ()=>{
+      const i = parseInt(el.dataset.suppDel);
+      const s0 = getSupplements();
+      askConfirm('Supprimer', `Supprimer "${s0[i][0]}" ?`, ()=>{
+        const s = getSupplements();
+        s.splice(i,1); setSupplements(s); renderAdmSupp(); renderItems();
+      });
+    };
+  });
+}
+document.getElementById('admSuppAdd').onclick = ()=>{
+  askText('Nom du nouveau supplément', 'ex: Olives noires', (nom)=>{
+    askNumber('Prix de "' + nom + '"', 'ex: 1.50', (prix)=>{
+      const s = getSupplements();
+      s.push([nom, prix]);
+      setSupplements(s); renderAdmSupp(); renderItems();
+    });
+  });
+};
+
+/* ===================== ADMIN MENU (Réglages) ===================== */
+let admMode = 'surPlace';
+document.querySelectorAll('#admModeToggle button').forEach(b=>{
+  b.onclick = ()=>{
+    admMode = b.dataset.admmode;
+    document.querySelectorAll('#admModeToggle button').forEach(x=>x.classList.toggle('active', x===b));
+    renderAdmMenu();
+  };
+});
+function renderAdmMenu(){
+  const wrap = document.getElementById('admMenu');
+  const menu = getMenu();
+  const cats = menu[admMode];
+  wrap.innerHTML = '';
+  Object.keys(cats).forEach(cat=>{
+    const box = document.createElement('div');
+    box.className = 'adm-cat';
+    const head = document.createElement('div');
+    head.className = 'adm-cat-head';
+    head.innerHTML = `<h4>${cat}</h4><span class="adm-del" data-cat-del="${cat}">✕ Supprimer la catégorie</span>`;
+    box.appendChild(head);
+    cats[cat].forEach((item,i)=>{
+      const [nom, prix, desc] = item;
+      const row = document.createElement('div');
+      row.className = 'adm-item-row';
+      row.innerHTML = `<input type="text" value="${nom}" data-it-nom="${cat}|${i}">
+        <input type="text" inputmode="decimal" value="${prix==='libre'?'libre':prix}" data-it-prix="${cat}|${i}">
+        <input type="text" value="${desc||''}" placeholder="composition" data-it-desc="${cat}|${i}">
+        <span class="adm-del" data-it-del="${cat}|${i}">✕</span>`;
+      box.appendChild(row);
+    });
+    // ligne d'ajout
+    const addRow = document.createElement('div');
+    addRow.className = 'adm-item-row';
+    addRow.innerHTML = `<input type="text" placeholder="Nom du nouvel article" data-newit-nom="${cat}">
+      <input type="text" inputmode="decimal" placeholder="Prix" data-newit-prix="${cat}">
+      <input type="text" placeholder="Composition" data-newit-desc="${cat}">
+      <span class="adm-del" style="color:var(--vert);" data-newit-ok="${cat}">✓</span>`;
+    box.appendChild(addRow);
+    wrap.appendChild(box);
+  });
+
+  wrap.querySelectorAll('[data-cat-del]').forEach(el=>{
+    el.onclick = ()=>{
+      const cat = el.dataset.catDel;
+      askConfirm('Supprimer la catégorie', `Supprimer la catégorie "${cat}" et tous ses articles ?`, ()=>{
+        const m = getMenu();
+        delete m[admMode][cat];
+        setMenu(m); renderAdmMenu(); renderCats(); renderItems();
+      });
+    };
+  });
+  wrap.querySelectorAll('[data-it-nom]').forEach(inp=>{
+    inp.onchange = ()=>{
+      const [cat,i] = inp.dataset.itNom.split('|');
+      const m = getMenu();
+      m[admMode][cat][i][0] = inp.value.trim() || m[admMode][cat][i][0];
+      setMenu(m); renderCats(); renderItems();
+    };
+  });
+  wrap.querySelectorAll('[data-it-prix]').forEach(inp=>{
+    inp.onchange = ()=>{
+      const [cat,i] = inp.dataset.itPrix.split('|');
+      const m = getMenu();
+      const raw = inp.value.trim();
+      if(raw.toLowerCase() === 'libre'){ m[admMode][cat][i][1] = 'libre'; }
+      else { const v = parseFloat(raw.replace(',','.')); if(!isNaN(v)) m[admMode][cat][i][1] = v; }
+      setMenu(m); renderAdmMenu(); renderCats(); renderItems();
+    };
+  });
+  wrap.querySelectorAll('[data-it-desc]').forEach(inp=>{
+    inp.onchange = ()=>{
+      const [cat,i] = inp.dataset.itDesc.split('|');
+      const m = getMenu();
+      m[admMode][cat][i][2] = inp.value.trim();
+      setMenu(m); renderItems();
+    };
+  });
+  wrap.querySelectorAll('[data-it-del]').forEach(el=>{
+    el.onclick = ()=>{
+      const [cat,i] = el.dataset.itDel.split('|');
+      const m0 = getMenu();
+      askConfirm('Supprimer', `Supprimer "${m0[admMode][cat][i][0]}" ?`, ()=>{
+        const m = getMenu();
+        m[admMode][cat].splice(i,1);
+        setMenu(m); renderAdmMenu(); renderCats(); renderItems();
+      });
+    };
+  });
+  wrap.querySelectorAll('[data-newit-ok]').forEach(el=>{
+    el.onclick = ()=>{
+      const cat = el.dataset.newitOk;
+      const box = el.closest('.adm-cat');
+      const nom = box.querySelector(`[data-newit-nom="${cat}"]`).value.trim();
+      const prixRaw = box.querySelector(`[data-newit-prix="${cat}"]`).value.trim();
+      const desc = box.querySelector(`[data-newit-desc="${cat}"]`).value.trim();
+      if(!nom){ toast("Donne un nom à l'article"); return; }
+      let prix;
+      if(prixRaw.toLowerCase() === 'libre') prix = 'libre';
+      else { prix = parseFloat(prixRaw.replace(',','.')); if(isNaN(prix)){ toast('Prix invalide'); return; } }
+      const m = getMenu();
+      m[admMode][cat].push([nom, prix, desc]);
+      setMenu(m); renderAdmMenu(); renderCats(); renderItems();
+    };
+  });
+}
+document.getElementById('admCatAdd').onclick = ()=>{
+  askText('Nom de la nouvelle catégorie', 'ex: Pizzas Végé', (nom)=>{
+    const m = getMenu();
+    if(!m[admMode][nom]) m[admMode][nom] = [];
+    setMenu(m); renderAdmMenu(); renderCats(); renderItems();
+  });
+};
+
+/* ===================== INIT ===================== */
+document.querySelectorAll('#modeToggle button').forEach(b=>{
+  if(b.dataset.mode === state.mode) b.classList.add('active'); else b.classList.remove('active');
+});
+document.getElementById('cartModeLbl').textContent = state.mode === 'surPlace' ? 'Sur place' : 'À emporter';
+renderCats();
+renderItems();
+renderCart();
+loadReglages();
+updateTableBtn();
+updateRetraitBtn();
+updateSalleToolbarVisibility();
+renderAdmSupp();
+renderAdmMenu();
+renderAdmImprimantes();
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
