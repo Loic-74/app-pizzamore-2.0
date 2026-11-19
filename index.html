@@ -58,6 +58,21 @@
     font-size:13px; font-weight:600; cursor:pointer;
   }
   .mode-toggle button.active{background:#fff; color:var(--rouge-fonce);}
+  /* ─── CHABL (plateforme de livraison partenaire) ───
+     Bouton pour marquer une commande comme passée via Chabl (couleur violette dédiée pour
+     la repérer facilement, comme sur l'app du foodtruck) + bandeau d'avertissement quand actif. */
+  .chip-chabl{
+    border:none; background:rgba(255,255,255,.18); color:#fff; padding:8px 14px; border-radius:999px;
+    font-size:13px; font-weight:700; cursor:pointer; flex:0 0 auto;
+  }
+  .chip-chabl.active{background:#5b52cc; color:#fff;}
+  .chabl-banner{
+    display:none; background:linear-gradient(90deg,#2a2566,#3b35a0,#2a2566); color:#dcd8ff;
+    text-align:center; font-size:13px; font-weight:700; padding:7px 14px; letter-spacing:.3px;
+    flex:0 0 auto;
+  }
+  .chabl-banner.show{display:block;}
+  .chabl-badge{display:inline-block; background:#eeebff; color:#3b35a0; border:1px solid #c9c2ff; padding:2px 8px; border-radius:6px; font-size:11.5px; font-weight:800; margin-left:6px;}
   #admModeToggle button{color:var(--rouge-fonce); opacity:.55;}
   #admModeToggle button.active{opacity:1;}
   .adm-cat{border:1px solid #e9ddc9; border-radius:12px; padding:12px; margin-bottom:12px;}
@@ -189,6 +204,30 @@
   .classement-grid{display:flex; gap:16px; flex-wrap:wrap;}
   .classement-card{flex:1 1 320px; background:#fff; border:1px solid #e9ddc9; border-radius:var(--radius); padding:14px;}
   .classement-card h3{margin:0 0 10px; font-size:15px;}
+  /* ─── HISTORIQUE ─── */
+  .hist-toggle{display:inline-flex; background:var(--creme2); border-radius:999px; padding:3px; margin-bottom:14px;}
+  .hist-toggle button{border:none; background:transparent; color:var(--rouge-fonce); padding:8px 16px; border-radius:999px; font-size:13px; font-weight:700; cursor:pointer; opacity:.6;}
+  .hist-toggle button.active{background:#fff; opacity:1;}
+  .hist-toggle button.chabl-tab{color:#3b35a0;}
+  .hist-day{border:1px solid #e9ddc9; border-radius:12px; margin-bottom:10px; overflow:hidden; background:#fff;}
+  .hist-day-hdr{background:var(--creme2); padding:10px 14px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; font-size:13.5px;}
+  .hist-day-hdr .d{font-weight:800;}
+  .hist-day-hdr .r{color:var(--gris); font-size:12.5px;}
+  .hist-day-body{padding:10px 14px; display:none;}
+  .hist-day-body.show{display:block;}
+  .hist-order{display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #f1e9d8; font-size:13px;}
+  .hist-order:last-child{border-bottom:none;}
+  .hist-stats{display:flex; gap:12px; flex-wrap:wrap; margin-bottom:14px;}
+  .hist-stat{background:#fff; border:1px solid #e9ddc9; border-radius:10px; padding:10px 16px; flex:1 1 140px; text-align:center;}
+  .hist-stat .v{font-size:19px; font-weight:800; color:var(--rouge-fonce);}
+  .hist-stat .l{font-size:11.5px; color:var(--gris); margin-top:2px;}
+  .chabl-month-row{display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap;}
+  .chabl-month-row input[type="month"]{padding:9px 12px; border-radius:8px; border:1.5px solid #e9ddc9; font-size:13.5px;}
+  .chabl-recap-table{width:100%; border-collapse:collapse; font-size:13px; margin-bottom:10px;}
+  .chabl-recap-table th,.chabl-recap-table td{text-align:left; padding:6px 8px; border-bottom:1px solid #f1e9d8;}
+  .chabl-recap-table th{color:var(--gris); font-size:11.5px; text-transform:uppercase; letter-spacing:.3px;}
+  .chabl-recap-table td.num,.chabl-recap-table th.num{text-align:right;}
+  .chabl-recap-total{display:flex; justify-content:space-between; font-weight:800; font-size:15px; padding:8px 0; border-top:2px solid var(--encre);}
   .rank-row{display:flex; align-items:center; gap:10px; padding:7px 0; border-bottom:1px solid #f1e9d8; font-size:13.5px;}
   .rank-row:last-child{border-bottom:none;}
   .rank-row .pos{width:22px; height:22px; border-radius:50%; background:var(--creme2); color:var(--rouge-fonce); font-weight:800; font-size:12px; display:flex; align-items:center; justify-content:center; flex:0 0 auto;}
@@ -266,8 +305,10 @@
         <button data-mode="surPlace" class="active">Sur place</button>
         <button data-mode="emporter">À emporter</button>
       </div>
+      <button id="btnChabl" class="chip-chabl">🛵 Chabl</button>
     </div>
   </header>
+  <div class="chabl-banner" id="chablBanner"></div>
 
   <nav class="tabs" id="tabs">
     <button data-view="commande" class="active">Commande</button>
@@ -275,6 +316,7 @@
     <button data-view="salle">Plan de salle</button>
     <button data-view="reservations">Réservations</button>
     <button data-view="classement">Classement</button>
+    <button data-view="historique">Historique</button>
     <button data-view="reglages">Réglages</button>
   </nav>
 
@@ -373,6 +415,32 @@
         </div>
       </div>
       <button class="btn-reset-class" id="btnResetClassement">Réinitialiser le classement</button>
+    </section>
+
+    <!-- HISTORIQUE -->
+    <section id="view-historique" class="view" style="flex-direction:column; overflow-y:auto; padding:16px;">
+      <div class="sync-note" style="margin-bottom:14px;">
+        Historique des commandes encaissées, synchronisé entre tous les appareils. L'onglet "🛵 Chabl" regroupe uniquement les commandes passées via Chabl, avec un récapitulatif imprimable à la fin du mois (prix des pizzas et des suppléments inclus).
+      </div>
+      <div class="hist-toggle" id="histToggle">
+        <button data-hist="jour" class="active">Aujourd'hui</button>
+        <button data-hist="semaine">7 jours</button>
+        <button data-hist="mois">30 jours</button>
+        <button data-hist="chabl" class="chabl-tab">🛵 Chabl</button>
+      </div>
+      <div id="histCommandesPanel">
+        <div id="histStats" class="hist-stats"></div>
+        <div id="histList"></div>
+      </div>
+      <div id="histChablPanel" style="display:none;">
+        <div class="chabl-month-row">
+          <label style="font-size:13px; font-weight:700; color:var(--encre);">Mois :</label>
+          <input type="month" id="chablMoisPicker">
+          <button class="btn-save" id="btnImprimerRecapChabl" style="background:#3b35a0;">📄 Imprimer le récap du mois</button>
+        </div>
+        <div id="histChablStats" class="hist-stats"></div>
+        <div id="histChablDetail"></div>
+      </div>
     </section>
 
     <!-- REGLAGES -->
@@ -731,7 +799,11 @@ let state = {
   // mode de paiement choisi pour la commande en cours : 'carte', 'espece' ou null (pas encore choisi)
   modePaiement: localStorage.getItem('pa2_modepaiement') || null,
   // "à couper" s'applique à toute la commande (plus de réglage pizza par pizza, trop long à faire)
-  couperCommande: localStorage.getItem('pa2_coupercommande') === '1'
+  couperCommande: localStorage.getItem('pa2_coupercommande') === '1',
+  // commande passée via la plateforme Chabl (livraison) : juste un "tag" sur la commande en cours,
+  // qui reste par ailleurs "à emporter" comme avant — voir section CHABL plus bas
+  chablMode: localStorage.getItem('pa2_chablmode') === '1',
+  chablNum: localStorage.getItem('pa2_chablnum') || null
 };
 let commandesActives = [];
 let nextLineId = 1;
@@ -746,6 +818,8 @@ const save = () => {
   localStorage.setItem('pa2_lignesenvoyees', JSON.stringify(state.lignesEnvoyees || []));
   localStorage.setItem('pa2_modepaiement', state.modePaiement || '');
   localStorage.setItem('pa2_coupercommande', state.couperCommande ? '1' : '0');
+  localStorage.setItem('pa2_chablmode', state.chablMode ? '1' : '0');
+  localStorage.setItem('pa2_chablnum', state.chablNum || '');
 };
 
 /* ===================== TOAST / MODALE ===================== */
@@ -826,6 +900,7 @@ document.getElementById('tabs').addEventListener('click', e=>{
   document.getElementById('view-' + btn.dataset.view).classList.add('active');
   if(btn.dataset.view === 'classement') renderClassement();
   if(btn.dataset.view === 'salle') renderSalle();
+  if(btn.dataset.view === 'historique') renderHistorique();
 });
 
 document.getElementById('modeToggle').addEventListener('click', e=>{
@@ -846,6 +921,50 @@ document.getElementById('modeToggle').addEventListener('click', e=>{
     askConfirm('Changer de mode', 'Ça va vider la commande en cours. Continuer ?', doSwitch);
   } else doSwitch();
 });
+
+/* ===================== CHABL (plateforme de livraison partenaire) =====================
+   Un simple "tag" posé sur la commande en cours (comme "à couper") : la commande reste par
+   ailleurs "à emporter" comme avant (synchro, impression, encaissement... rien ne change).
+   Active un bandeau visible + mémorise le n° de commande donné par Chabl, pour pouvoir
+   ensuite les retrouver et imprimer un récap de fin de mois dans l'onglet "Historique". */
+function updateChablBanner(){
+  const btn = document.getElementById('btnChabl');
+  const banner = document.getElementById('chablBanner');
+  btn.classList.toggle('active', !!state.chablMode);
+  if(state.chablMode){
+    banner.textContent = '🛵 MODE CHABL — Commande n°' + (state.chablNum || '?') + ' — les articles ajoutés seront tagués "Chabl"';
+    banner.classList.add('show');
+  } else {
+    banner.classList.remove('show');
+  }
+  // paiement espèces/carte n'a pas de sens pour une commande déjà payée via Chabl
+  const pc = document.getElementById('paiementChips');
+  if(pc) pc.style.display = state.chablMode ? 'none' : 'flex';
+}
+document.getElementById('btnChabl').onclick = ()=>{
+  if(state.chablMode){
+    askConfirm('Désactiver le mode Chabl', 'La commande en cours ne sera plus tagué "Chabl" ?', ()=>{
+      state.chablMode = false; state.chablNum = null;
+      save(); updateChablBanner();
+    });
+    return;
+  }
+  askText('Numéro de commande Chabl', 'ex: 48291', (num)=>{
+    state.chablMode = true;
+    state.chablNum = num;
+    // une commande Chabl est toujours une livraison : on repasse en "à emporter" si besoin
+    if(state.mode !== 'emporter'){
+      state.mode = 'emporter';
+      document.querySelectorAll('#modeToggle button').forEach(b=> b.classList.toggle('active', b.dataset.mode === 'emporter'));
+      document.getElementById('cartModeLbl').textContent = 'À emporter';
+      state.table = null;
+      state.currentCat = null;
+      renderCats(); renderItems(); updateTableBtn(); updateRetraitBtn();
+    }
+    save(); updateChablBanner();
+    toast('🛵 Mode Chabl n°' + num + ' activé');
+  });
+};
 
 /* ===================== PLAN DE SALLE : choix de table pour "sur place" ===================== */
 function getOccupiedTableIds(){
@@ -1123,6 +1242,7 @@ function renderCart(){
   });
   renderTotals();
   updatePaiementChips();
+  updateChablBanner();
 }
 
 // Met à jour l'affichage (actif/inactif) des deux puces de paiement du panier selon state.modePaiement
@@ -1348,7 +1468,7 @@ function renderTotals(){
 document.getElementById('btnVider').onclick = ()=>{
   if(!state.cart.length) return;
   askConfirm('Vider la commande', 'Vider la commande en cours ?', ()=>{
-    state.cart = []; state.selectedLine = null; state.table = null; state.heureRetrait = null; state.activeFirestoreId = null; state.lignesEnvoyees = []; state.modePaiement = null; state.couperCommande = false;
+    state.cart = []; state.selectedLine = null; state.table = null; state.heureRetrait = null; state.activeFirestoreId = null; state.lignesEnvoyees = []; state.modePaiement = null; state.couperCommande = false; state.chablMode = false; state.chablNum = null;
     renderCart(); save(); updateTableBtn(); updateRetraitBtn(); renderSalle();
   });
 };
@@ -1380,7 +1500,7 @@ document.getElementById('btnValider').onclick = ()=>{
   const role = localStorage.getItem('pa2_role') || 'ipad';
   const finirLocal = (msg)=>{
     toast(msg);
-    state.cart = []; state.selectedLine = null; state.activeFirestoreId = null; state.table = null; state.heureRetrait = null; state.lignesEnvoyees = []; state.modePaiement = null; state.couperCommande = false;
+    state.cart = []; state.selectedLine = null; state.activeFirestoreId = null; state.table = null; state.heureRetrait = null; state.lignesEnvoyees = []; state.modePaiement = null; state.couperCommande = false; state.chablMode = false; state.chablNum = null;
     renderCart(); save(); updateTableBtn(); updateRetraitBtn(); renderSalle();
   };
   // on ne réimprime en cuisine que les lignes pas encore envoyées (nouveaux articles ajoutés
@@ -1390,7 +1510,7 @@ document.getElementById('btnValider').onclick = ()=>{
   if(state.activeFirestoreId){
     // mise à jour d'une commande déjà envoyée (ex: ajout des plats après les entrées)
     fbDb.collection('commandes').doc(state.activeFirestoreId).update({
-      lignes: state.cart, table: state.table || null, heureRetrait: state.heureRetrait || null, statut: 'recue', modePaiement: state.modePaiement || null, couperCommande: !!state.couperCommande
+      lignes: state.cart, table: state.table || null, heureRetrait: state.heureRetrait || null, statut: 'recue', modePaiement: state.modePaiement || null, couperCommande: !!state.couperCommande, chablMode: !!state.chablMode, chablNum: state.chablMode ? (state.chablNum || null) : null
     }).then(()=> finirLocal('Commande mise à jour ✅')).catch(e=>{
       console.error(e);
       toast('⚠️ Synchro indisponible (' + (e && e.code ? e.code : 'erreur') + ')');
@@ -1405,6 +1525,8 @@ document.getElementById('btnValider').onclick = ()=>{
       envoyePar: role,
       modePaiement: state.modePaiement || null,
       couperCommande: !!state.couperCommande,
+      chablMode: !!state.chablMode,
+      chablNum: state.chablMode ? (state.chablNum || null) : null,
       creeLe: firebase.firestore.FieldValue.serverTimestamp()
     }).then(()=> finirLocal('Commande validée ✅')).catch(e=>{
       console.error(e);
@@ -1437,9 +1559,10 @@ function ouvrirDetailCommande(id, data){
   document.getElementById('detailTitle').textContent = titre;
   const retraitTxt = data.heureRetrait ? ` · 🕐 Retrait ${data.heureRetrait}` : '';
   const couperTxt = data.couperCommande ? ' · ✂️ À couper' : '';
+  const chablTxt = data.chablMode ? ' · 🛵 Chabl n°' + (data.chablNum || '?') : '';
   document.getElementById('detailResume').textContent =
     (data.envoyePar === 'serveur' ? '📱 Envoyée par un serveur' : '🖥️ Envoyée depuis la caisse') +
-    (data.statut === 'en_traitement' ? ' · en cours de traitement' : '') + retraitTxt + couperTxt;
+    (data.statut === 'en_traitement' ? ' · en cours de traitement' : '') + retraitTxt + couperTxt + chablTxt;
   const lignesHtml = (data.lignes||[]).map(l=>{
     let t = `<div style="display:flex; justify-content:space-between; padding:3px 0; font-weight:600;"><span>${l.nom}</span><span>${fmt(l.prix + (l.supps||[]).reduce((s,x)=>s+x.prix,0))}</span></div>`;
     (l.supps||[]).forEach(s=> t += `<div style="padding-left:12px; color:var(--gris); font-size:12px;">+ ${s.nom}</div>`);
@@ -1512,6 +1635,8 @@ function chargerCommande(id, data){
     state.heureRetrait = data.heureRetrait || null;
     state.modePaiement = data.modePaiement || null;
     state.couperCommande = !!data.couperCommande;
+    state.chablMode = !!data.chablMode;
+    state.chablNum = data.chablNum || null;
     // on mémorise les lignes déjà envoyées en cuisine : tout ce qui sera ajouté après
     // ce chargement est considéré comme "nouveau" et sera seul réimprimé en cuisine
     state.lignesEnvoyees = state.cart.map(l => l.id);
@@ -1557,9 +1682,10 @@ if(fbOk && fbDb){
           const retraitLbl = data.heureRetrait ? ` 🕐 Retrait ${data.heureRetrait}` : '';
           const paieLbl = data.modePaiement === 'carte' ? ' 💳' : (data.modePaiement === 'espece' ? ' 💶' : '');
           const couperLbl = data.couperCommande ? ' ✂️' : '';
+          const chablLbl = data.chablMode ? ` <span class="chabl-badge">🛵 Chabl ${data.chablNum || ''}</span>` : '';
           const el = document.createElement('div');
           el.className = 'file-card' + (data.statut==='en_traitement' ? ' traitement' : '');
-          el.innerHTML = `<div class="fh"><span>${tableLbl || (data.mode==='surPlace'?'Sur place':'À emporter')}${retraitLbl}${paieLbl}${couperLbl} — ${fmt(total)}</span><span>${data.envoyePar==='serveur'?'📱 serveur':'🖥️ iPad'}</span></div>
+          el.innerHTML = `<div class="fh"><span>${tableLbl || (data.mode==='surPlace'?'Sur place':'À emporter')}${retraitLbl}${paieLbl}${couperLbl} — ${fmt(total)}${chablLbl}</span><span>${data.envoyePar==='serveur'?'📱 serveur':'🖥️ iPad'}</span></div>
             <div class="fi">${resume}</div>
             <div class="fs">${data.statut==='en_traitement' ? 'En cours de traitement' : 'Nouvelle — appuie pour voir'}</div>`;
           el.onclick = ()=> ouvrirDetailCommande(id, data);
@@ -1746,6 +1872,193 @@ document.getElementById('btnResetClassement').onclick = ()=>{
   });
 };
 
+/* ===================== HISTORIQUE (commandes encaissées + récap Chabl) =====================
+   Les commandes passent par Firestore avec statut 'recue' -> 'en_traitement' -> 'encaissee' ;
+   elles ne sont jamais supprimées, donc elles forment naturellement un historique qu'on peut
+   relire ici. Chargé à la demande (pas en temps réel) quand on ouvre l'onglet, pour rester
+   simple et ne pas alourdir la synchro des autres écrans. */
+let histOngletActif = 'jour';
+let histCommandesCache = null; // cache des commandes encaissées déjà chargées cette session
+document.getElementById('histToggle').addEventListener('click', e=>{
+  const btn = e.target.closest('button[data-hist]');
+  if(!btn) return;
+  histOngletActif = btn.dataset.hist;
+  document.querySelectorAll('#histToggle button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderHistorique();
+});
+function chargerCommandesEncaissees(force){
+  if(histCommandesCache && !force) return Promise.resolve(histCommandesCache);
+  if(!(fbOk && fbDb)) return Promise.reject(new Error('pas de synchro'));
+  return fbDb.collection('commandes').where('statut','==','encaissee').get().then(snap=>{
+    const docs = [];
+    snap.forEach(d=> docs.push({id:d.id, data:d.data()}));
+    histCommandesCache = docs;
+    return docs;
+  });
+}
+function renderHistorique(){
+  const estChabl = histOngletActif === 'chabl';
+  document.getElementById('histCommandesPanel').style.display = estChabl ? 'none' : 'block';
+  document.getElementById('histChablPanel').style.display = estChabl ? 'block' : 'none';
+  if(estChabl){
+    if(!document.getElementById('chablMoisPicker').value){
+      const now = new Date();
+      document.getElementById('chablMoisPicker').value = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+    }
+    renderHistChabl();
+    return;
+  }
+  document.getElementById('histStats').innerHTML = '';
+  document.getElementById('histList').innerHTML = '<div class="classement-empty">Chargement…</div>';
+  chargerCommandesEncaissees().then(docs=>{
+    const now = new Date();
+    let start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    if(histOngletActif !== 'jour') start.setDate(start.getDate() - (histOngletActif === 'semaine' ? 6 : 29));
+    const filtered = docs.filter(({data})=> data.creeLe && data.creeLe.toDate() >= start);
+    afficherHistCommandes(filtered);
+  }).catch(e=>{
+    console.error(e);
+    document.getElementById('histList').innerHTML = '<div class="classement-empty">⚠️ Pas de synchro — historique indisponible.</div>';
+  });
+}
+function afficherHistCommandes(docs){
+  docs.sort((a,b)=> (b.data.creeLe?.seconds||0) - (a.data.creeLe?.seconds||0));
+  const ca = docs.reduce((s,{data})=> s + cartTotal(data.lignes).ttc, 0);
+  const nbPizzas = docs.reduce((s,{data})=> s + (data.lignes||[]).filter(l=>estUnePizza(l.nom)).length, 0);
+  document.getElementById('histStats').innerHTML = `
+    <div class="hist-stat"><div class="v">${docs.length}</div><div class="l">Commandes</div></div>
+    <div class="hist-stat"><div class="v">${fmt(ca)}</div><div class="l">Chiffre d'affaires</div></div>
+    <div class="hist-stat"><div class="v">${nbPizzas}</div><div class="l">Pizzas vendues</div></div>`;
+  const list = document.getElementById('histList');
+  if(!docs.length){ list.innerHTML = '<div class="classement-empty">Aucune commande encaissée sur cette période.</div>'; return; }
+  const byDay = {};
+  docs.forEach(({id,data})=>{
+    const key = data.creeLe ? data.creeLe.toDate().toLocaleDateString('fr-FR') : 'Date inconnue';
+    if(!byDay[key]) byDay[key] = [];
+    byDay[key].push({id,data});
+  });
+  list.innerHTML = Object.keys(byDay).map((day,di)=>{
+    const items = byDay[day];
+    const caJour = items.reduce((s,{data})=> s + cartTotal(data.lignes).ttc, 0);
+    const bodyId = 'histday_' + di;
+    const rows = items.map(({data})=>{
+      const total = cartTotal(data.lignes).ttc;
+      const resume = (data.lignes||[]).map(l=>l.nom).join(', ') || 'Commande vide';
+      const chablLbl = data.chablMode ? ' 🛵' : '';
+      const heure = data.creeLe ? data.creeLe.toDate().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
+      return `<div class="hist-order"><span>${heure} — ${resume}${chablLbl}</span><span>${fmt(total)}</span></div>`;
+    }).join('');
+    return `<div class="hist-day">
+      <div class="hist-day-hdr" onclick="document.getElementById('${bodyId}').classList.toggle('show')">
+        <span class="d">📅 ${day}</span><span class="r">${items.length} commande(s) — ${fmt(caJour)}</span>
+      </div>
+      <div class="hist-day-body" id="${bodyId}">${rows}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ---- Récap Chabl : regroupé par mois, prix des articles ET des suppléments visibles ---- */
+function moisDebutFin(moisStr){
+  const [y,m] = moisStr.split('-').map(Number);
+  return { debut: new Date(y, m-1, 1), fin: new Date(y, m, 1) };
+}
+let dernierRecapChabl = null;
+function renderHistChabl(){
+  const stats = document.getElementById('histChablStats');
+  const detail = document.getElementById('histChablDetail');
+  stats.innerHTML = '';
+  detail.innerHTML = '<div class="classement-empty">Chargement…</div>';
+  const moisStr = document.getElementById('chablMoisPicker').value;
+  if(!moisStr) return;
+  const { debut, fin } = moisDebutFin(moisStr);
+  if(!(fbOk && fbDb)){ detail.innerHTML = '<div class="classement-empty">⚠️ Pas de synchro.</div>'; return; }
+  fbDb.collection('commandes').where('statut','==','encaissee').where('chablMode','==',true).get().then(snap=>{
+    const docs = [];
+    snap.forEach(d=>{
+      const data = d.data();
+      if(data.creeLe && data.creeLe.toDate() >= debut && data.creeLe.toDate() < fin) docs.push({id:d.id, data});
+    });
+    afficherRecapChabl(docs, moisStr);
+  }).catch(e=>{
+    console.error(e);
+    detail.innerHTML = '<div class="classement-empty">⚠️ Erreur de chargement (' + (e && e.code ? e.code : 'erreur') + ')</div>';
+  });
+}
+function afficherRecapChabl(docs, moisStr){
+  docs.sort((a,b)=> (a.data.creeLe?.seconds||0) - (b.data.creeLe?.seconds||0));
+  const articles = {}; // nom -> {qte, total}  (pizzas, plats, boissons... tout ce qui n'est pas un supplément)
+  const supps = {};
+  docs.forEach(({data})=>{
+    (data.lignes||[]).forEach(l=>{
+      if(!articles[l.nom]) articles[l.nom] = {qte:0, total:0};
+      articles[l.nom].qte += 1;
+      articles[l.nom].total += l.prix;
+      (l.supps||[]).forEach(s=>{
+        if(!supps[s.nom]) supps[s.nom] = {qte:0, total:0};
+        supps[s.nom].qte += 1;
+        supps[s.nom].total += s.prix;
+      });
+    });
+  });
+  const totalArticles = Object.values(articles).reduce((s,p)=>s+p.total,0);
+  const totalSupps = Object.values(supps).reduce((s,p)=>s+p.total,0);
+  const total = totalArticles + totalSupps;
+  dernierRecapChabl = { moisStr, docs, articles, supps, totalArticles, totalSupps, total };
+  document.getElementById('histChablStats').innerHTML = `
+    <div class="hist-stat"><div class="v">${docs.length}</div><div class="l">Commandes Chabl</div></div>
+    <div class="hist-stat"><div class="v">${fmt(total)}</div><div class="l">Total du mois</div></div>`;
+  const detail = document.getElementById('histChablDetail');
+  if(!docs.length){ detail.innerHTML = '<div class="classement-empty">Aucune commande Chabl ce mois-ci.</div>'; return; }
+  const ligneTable = (obj) => Object.entries(obj).sort((a,b)=>b[1].total-a[1].total).map(([nom,v])=>
+    `<tr><td>${nom}</td><td class="num">${v.qte}</td><td class="num">${fmt(v.total/v.qte)}</td><td class="num">${fmt(v.total)}</td></tr>`
+  ).join('');
+  detail.innerHTML = `
+    <h4 style="margin:14px 0 6px; font-size:13.5px;">🍕 Articles (pizzas, plats, boissons...)</h4>
+    <table class="chabl-recap-table"><thead><tr><th>Article</th><th class="num">Qté</th><th class="num">Prix unit.</th><th class="num">Total</th></tr></thead>
+    <tbody>${ligneTable(articles) || '<tr><td colspan="4" style="color:var(--gris)">Aucun</td></tr>'}</tbody></table>
+    <h4 style="margin:14px 0 6px; font-size:13.5px;">➕ Suppléments</h4>
+    <table class="chabl-recap-table"><thead><tr><th>Supplément</th><th class="num">Qté</th><th class="num">Prix unit.</th><th class="num">Total</th></tr></thead>
+    <tbody>${ligneTable(supps) || '<tr><td colspan="4" style="color:var(--gris)">Aucun</td></tr>'}</tbody></table>
+    <div class="chabl-recap-total"><span>Total général</span><span>${fmt(total)}</span></div>`;
+}
+document.getElementById('chablMoisPicker').addEventListener('change', renderHistChabl);
+document.getElementById('btnImprimerRecapChabl').onclick = ()=>{
+  if(!dernierRecapChabl || !dernierRecapChabl.docs.length){ toast('Aucune commande Chabl à imprimer pour ce mois'); return; }
+  imprimerRecapChabl(dernierRecapChabl);
+};
+function imprimerRecapChabl(r){
+  const reg = JSON.parse(localStorage.getItem('pa2_reglages') || '{}');
+  const [y,m] = r.moisStr.split('-');
+  const moisLbl = new Date(Number(y), Number(m)-1, 1).toLocaleDateString('fr-FR',{month:'long', year:'numeric'});
+  let articlesTxt = '';
+  Object.entries(r.articles).sort((a,b)=>b[1].total-a[1].total).forEach(([nom,v])=>{
+    articlesTxt += `${nom} x${v.qte} .......... ${fmt(v.total)}\n`;
+  });
+  let suppsTxt = '';
+  Object.entries(r.supps).sort((a,b)=>b[1].total-a[1].total).forEach(([nom,v])=>{
+    suppsTxt += `${nom} x${v.qte} .......... ${fmt(v.total)}\n`;
+  });
+  const el = document.getElementById('ticket-print');
+  el.innerHTML = `<pre>RECAP CHABL - ${moisLbl.toUpperCase()}
+${reg.nom || "Pizz'Amore 2.0"}
+--------------------------------
+${r.docs.length} commande(s) Chabl
+--------------------------------
+ARTICLES
+${articlesTxt || 'Aucun\n'}--------------------------------
+SUPPLEMENTS
+${suppsTxt || 'Aucun\n'}--------------------------------
+Total articles    : ${fmt(r.totalArticles)}
+Total supplements  : ${fmt(r.totalSupps)}
+TOTAL GENERAL      : ${fmt(r.total)}
+--------------------------------
+${new Date().toLocaleString('fr-FR')}
+</pre>`;
+  toastImprimante('caisse');
+  window.print();
+}
+
 /* ===================== TICKET ===================== */
 function buildLignesText(cart){
   let lignes = '';
@@ -1765,6 +2078,7 @@ function enteteModeTicket(order){
   const lignes = o.lignes || o.cart;
   let s = o.mode === 'surPlace' ? 'SUR PLACE' + (o.table ? ' - TABLE ' + o.table.num : '') : 'A EMPORTER';
   if(o.mode === 'emporter' && o.heureRetrait) s += ' - RETRAIT ' + o.heureRetrait;
+  if(o.chablMode) s += ' - CHABL N°' + (o.chablNum || '?');
   return s;
 }
 function toastImprimante(cat){
