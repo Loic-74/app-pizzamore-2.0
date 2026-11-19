@@ -31,12 +31,20 @@
     color:var(--encre);
     overflow:hidden;
   }
-  #app{display:flex; flex-direction:column; height:100vh; height:100dvh;}
+  #app{
+    display:flex; flex-direction:column; height:100vh; height:100dvh;
+    /* marges de sécurité pour les coins arrondis / l'indicateur d'accueil en mode paysage sur iPad */
+    padding-left:env(safe-area-inset-left); padding-right:env(safe-area-inset-right); padding-bottom:env(safe-area-inset-bottom);
+  }
 
   header{
     background:linear-gradient(135deg,var(--rouge),var(--rouge-fonce));
     color:#fff;
-    padding:10px 16px;
+    /* padding-top tient compte de la barre de statut iPad (horloge/batterie) quand l'app est
+       installée sur l'écran d'accueil : sans ça, cette barre système se superpose aux boutons
+       "Sur place / À emporter" du header (viewport-fit=cover + status bar "black-translucent"
+       font passer le contenu de la page sous la barre système, donc il faut le repousser) */
+    padding:calc(10px + env(safe-area-inset-top)) 16px 10px;
     display:flex; align-items:center; justify-content:space-between;
     flex-wrap:wrap; gap:8px;
     box-shadow:0 2px 8px rgba(0,0,0,.2);
@@ -1147,14 +1155,17 @@ function ouvrirPersoEdit(lineId){
   persoDraftMode = false;
   persoDraftLine = null;
   state.selectedLine = lineId;
-  renderPerso();
+  renderPerso(true);
 }
 function ouvrirPersoDraft(nom, prix){
   persoDraftMode = true;
   persoDraftLine = {nom, prix, supps: [], notes: [], cuisson: null};
-  renderPerso();
+  renderPerso(true);
 }
-function renderPerso(){
+// ouvertureInitiale = true seulement au tout premier affichage de la fenêtre : évite que
+// chaque clic sur un ingrédient/supplément (qui redessine la fenêtre) ne remette le focus
+// dans le champ commentaire et fasse surgir le clavier tactile à chaque fois
+function renderPerso(ouvertureInitiale){
   const line = persoLigneActuelle();
   if(!line) return;
   if(!line.notes) line.notes = [];
@@ -1222,9 +1233,11 @@ function renderPerso(){
     };
   });
   document.getElementById('persoValider').style.display = persoDraftMode ? 'block' : 'none';
-  document.getElementById('persoNoteInput').value = '';
   ov.classList.add('show');
-  document.getElementById('persoNoteInput').focus();
+  if(ouvertureInitiale){
+    document.getElementById('persoNoteInput').value = '';
+    document.getElementById('persoNoteInput').focus();
+  }
 }
 function ajouterNotePerso(){
   const line = persoLigneActuelle();
