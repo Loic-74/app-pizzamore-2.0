@@ -122,7 +122,19 @@
   .item-btn .pr{font-size:13px; color:var(--rouge); font-weight:700; margin-top:6px;}
   .item-btn.libre .pr{color:var(--vert);}
   .tile-perso{position:absolute; top:6px; right:6px; width:22px; height:22px; border-radius:50%; border:1px solid #e9ddc9; background:#fff; color:var(--gris); font-weight:900; cursor:pointer; line-height:1;}
-  .item-btn{position:relative;}
+  .item-btn{position:relative; transition:transform .5s ease, background .5s ease, border-color .5s ease;}
+  .item-btn.pressing{transform:scale(.93); background:#fdeceb; border-color:var(--rouge);}
+  .item-btn.add-tile{align-items:center; justify-content:center; border:2px dashed #e9ddc9; color:var(--gris); font-weight:700; background:transparent; box-shadow:none;}
+  .item-btn.add-tile .nm{font-size:13px; color:var(--gris);}
+  .item-btn.add-tile:active{background:var(--creme2);}
+  .item-btn.drag-source{opacity:.25;}
+  .item-btn.drag-ghost{position:fixed; pointer-events:none; z-index:9999; opacity:.92; transform:scale(1.06) rotate(1.5deg); box-shadow:0 12px 28px rgba(0,0,0,.3); transition:none !important;}
+  .item-btn.drag-insert-before{box-shadow:-4px 0 0 0 var(--rouge);}
+  .item-btn.drag-insert-after{box-shadow:4px 0 0 0 var(--rouge);}
+  #cats button.drag-over-cat{background:var(--rouge) !important; color:#fff !important; transform:scale(1.08);}
+  #dragTrash{position:fixed; bottom:0; left:0; right:0; height:70px; background:rgba(179,38,30,.93); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; z-index:9998; transform:translateY(100%); transition:transform .2s, background .15s; pointer-events:none;}
+  #dragTrash.visible{transform:translateY(0);}
+  #dragTrash.active{background:var(--rouge-fonce);}
   .perso-chip{border:1.5px solid #e9ddc9; background:#fff; border-radius:999px; padding:6px 12px; font-size:12px; font-weight:600; cursor:pointer; color:var(--encre);}
   .perso-chip.actif{background:var(--rouge); border-color:var(--rouge); color:#fff;}
   .perso-chip b{margin-left:4px; font-weight:900; cursor:pointer;}
@@ -147,6 +159,11 @@
   .cart-line .sup{font-size:12px; color:var(--gris); display:flex; justify-content:space-between; padding-left:8px; margin-top:3px;}
   .cart-line .sup .del{cursor:pointer;}
   .cart-empty{color:var(--gris); font-size:13px; text-align:center; margin-top:30px;}
+  .qty-row{display:flex; align-items:center; gap:7px; margin-top:7px;}
+  .qbtn{width:26px; height:26px; border-radius:7px; border:1px solid #e9ddc9; background:#fff; color:var(--encre); font-size:15px; font-weight:800; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0;}
+  .qbtn:active{background:var(--creme2);}
+  .qn{font-weight:800; font-size:13px; min-width:18px; text-align:center;}
+  .qty-unit{font-size:11px; color:var(--gris); margin-left:2px;}
 
   .cart-totals{flex:0 0 auto; padding:10px 14px; border-top:1px solid #eee2cc;}
   .cart-totals .ln{display:flex; justify-content:space-between; font-size:12.5px; color:var(--gris); margin-bottom:3px;}
@@ -243,8 +260,8 @@
   .reg-card .desc{font-size:12px; color:var(--gris); margin-bottom:12px;}
   .field{margin-bottom:12px;}
   .field label{display:block; font-size:12px; font-weight:700; color:var(--gris); margin-bottom:4px;}
-  .field input{width:100%; padding:10px 12px; border-radius:8px; border:1.5px solid #e9ddc9; font-size:14px;}
-  .field input:focus{outline:none; border-color:var(--rouge);}
+  .field input, .field select{width:100%; padding:10px 12px; border-radius:8px; border:1.5px solid #e9ddc9; font-size:14px; background:#fff;}
+  .field input:focus, .field select:focus{outline:none; border-color:var(--rouge);}
   .field.siret input{border-color:var(--vert); background:#f3fbf6;}
   .btn-save{background:var(--rouge); color:#fff; border:none; padding:11px 18px; border-radius:10px; font-weight:700; cursor:pointer; font-size:13px;}
   .tva-badge{display:inline-block; background:var(--creme2); color:var(--rouge-fonce); font-weight:800; padding:6px 12px; border-radius:8px; font-size:13px;}
@@ -669,9 +686,28 @@
   </div>
 </div>
 
+<div class="overlay" id="addPlatOverlay">
+  <div class="modal" style="max-width:380px; text-align:left;">
+    <h3>Ajouter un plat</h3>
+    <div class="field"><label>Nom</label><input id="apNom" type="text" placeholder="ex: Napoletana"></div>
+    <div class="field"><label>Catégorie</label><select id="apCat"></select></div>
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+      <input type="checkbox" id="apLibre" style="width:17px; height:17px;">
+      <label for="apLibre" style="font-size:13px; cursor:pointer;">Prix libre (saisi à chaque fois)</label>
+    </div>
+    <div class="field" id="apPrixField"><label>Prix (€)</label><input id="apPrix" type="number" step="0.5" min="0" inputmode="decimal" placeholder="ex: 12.50"></div>
+    <div class="field"><label>Ingrédients (optionnel, séparés par des virgules)</label><input id="apDesc" type="text" placeholder="ex: tomate, mozzarella, basilic"></div>
+    <div class="mrow">
+      <button class="cancel" id="apCancel">Annuler</button>
+      <button class="confirm" id="apConfirm">Ajouter</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <div id="ticket-print"></div>
+<div id="dragTrash">🗑️ Relâcher pour supprimer</div>
 
 <!-- Firebase (synchro temps réel serveurs <-> iPad) -->
 <script src="https://www.gstatic.com/firebasejs/12.6.0/firebase-app-compat.js"></script>
@@ -1092,6 +1128,7 @@ function renderCats(){
   cats.forEach(cat=>{
     const b = document.createElement('button');
     b.textContent = cat;
+    b.dataset.cat = cat;
     if(cat === state.currentCat) b.classList.add('active');
     b.onclick = ()=>{ state.currentCat = cat; renderCats(); renderItems(); };
     wrap.appendChild(b);
@@ -1108,18 +1145,23 @@ function renderItems(){
   const grid = document.getElementById('itemsGrid');
   grid.innerHTML = '';
   let list;
-  if(state.currentCat === '__PDJ__') list = [["Plat du jour", "libre"]];
+  const estPDJ = state.currentCat === '__PDJ__';
+  if(estPDJ) list = [["Plat du jour", "libre"]];
   else list = getMenu()[state.mode][state.currentCat] || [];
 
-  list.forEach(([nom, prix, desc])=>{
+  list.forEach(([nom, prix, desc], idx)=>{
     const b = document.createElement('div');
     b.className = 'item-btn' + (prix === 'libre' ? ' libre' : '');
-    const showPerso = state.currentCat !== '__PDJ__';
+    b.dataset.idx = idx;
+    b.dataset.nom = nom;
+    b.dataset.prix = String(prix);
+    const showPerso = !estPDJ;
     b.innerHTML = `<div class="nm">${nom}</div>` +
       (desc ? `<div class="ds">${desc}</div>` : '') +
       `<div class="pr">${prix === 'libre' ? 'Prix libre' : fmt(prix)}</div>` +
       (showPerso ? `<button class="tile-perso" title="Personnaliser avant d'ajouter">⋯</button>` : '');
     b.onclick = (e)=>{
+      if(dragPlat.didDrag){ dragPlat.didDrag = false; return; }
       if(e.target.closest('.tile-perso')){
         // ouvre la personnalisation SANS ajouter au panier : l'ajout ne se fait qu'en cliquant
         // "Valider" dans la fenêtre (sinon "Fermer" sans valider ajoutait quand même l'article)
@@ -1134,11 +1176,232 @@ function renderItems(){
     };
     grid.appendChild(b);
   });
+  // "+ Ajouter" en fin de grille — pas sur "Plat du jour" (emplacement fixe, pas un vrai plat)
+  if(!estPDJ){
+    const add = document.createElement('div');
+    add.className = 'item-btn add-tile';
+    add.innerHTML = '<div class="nm">+ Ajouter un plat</div>';
+    add.onclick = ouvrirAjoutPlat;
+    grid.appendChild(add);
+  }
 }
+
+/* ===================== GESTION DE LA CARTE : AJOUT / DÉPLACEMENT / SUPPRESSION ===================== */
+// Comme sur l'app foodtruck : rester appuyé sur un plat permet de le faire glisser pour le
+// réordonner dans sa catégorie, le déposer sur un onglet pour le déplacer dans une autre
+// catégorie, ou le déposer en bas (zone 🗑️) pour le supprimer définitivement de la carte.
+const dragPlat = {active:false, idx:null, nom:null, prix:null, fromCat:null, fromMode:null, ghost:null, source:null, timer:null, startX:0, startY:0, offsetX:0, offsetY:0, didDrag:false};
+
+function dpElemAt(x,y){
+  if(dragPlat.ghost) dragPlat.ghost.style.visibility = 'hidden';
+  const el = document.elementFromPoint(x,y);
+  if(dragPlat.ghost) dragPlat.ghost.style.visibility = '';
+  return el;
+}
+function dpStart(el){
+  if(navigator.vibrate) navigator.vibrate(40);
+  dragPlat.active = true;
+  dragPlat.idx = parseInt(el.dataset.idx);
+  dragPlat.nom = el.dataset.nom;
+  dragPlat.prix = el.dataset.prix;
+  dragPlat.fromCat = state.currentCat;
+  dragPlat.fromMode = state.mode;
+  dragPlat.source = el; el.classList.add('drag-source');
+  const r = el.getBoundingClientRect();
+  const g = el.cloneNode(true);
+  g.className = 'item-btn drag-ghost';
+  g.style.cssText = 'width:'+r.width+'px;height:'+r.height+'px;left:'+r.left+'px;top:'+r.top+'px;';
+  document.body.appendChild(g);
+  dragPlat.ghost = g; dragPlat.offsetX = r.width/2; dragPlat.offsetY = r.height/2;
+  document.getElementById('dragTrash').classList.add('visible');
+}
+function dpMove(x,y){
+  if(!dragPlat.ghost) return;
+  dragPlat.ghost.style.left = (x-dragPlat.offsetX)+'px';
+  dragPlat.ghost.style.top = (y-dragPlat.offsetY)+'px';
+  const inTrash = y > window.innerHeight - 80;
+  document.getElementById('dragTrash').classList.toggle('active', inTrash);
+  document.querySelectorAll('.drag-over-cat,.drag-insert-before,.drag-insert-after').forEach(e=>e.classList.remove('drag-over-cat','drag-insert-before','drag-insert-after'));
+  if(inTrash) return;
+  const under = dpElemAt(x,y);
+  if(!under) return;
+  const catBtn = under.closest('#cats button[data-cat]');
+  if(catBtn && catBtn.dataset.cat !== dragPlat.fromCat){ catBtn.classList.add('drag-over-cat'); return; }
+  const tile = under.closest('.item-btn:not(.drag-source):not(.add-tile)');
+  if(tile){ const r = tile.getBoundingClientRect(); tile.classList.add(x < r.left + r.width/2 ? 'drag-insert-before' : 'drag-insert-after'); }
+}
+function dpEnd(x,y){
+  if(!dragPlat.active) return;
+  const inTrash = y > window.innerHeight - 80;
+  const under = dpElemAt(x,y);
+  const { idx, nom, prix, fromCat, fromMode } = dragPlat;
+  dpClean();
+  const menu = getMenu();
+  const arr = menu[fromMode] && menu[fromMode][fromCat];
+  // sécurité : si la carte a changé entre le début et la fin du geste, on abandonne sans rien casser
+  if(!arr || !arr[idx] || arr[idx][0] !== nom || String(arr[idx][1]) !== prix) return;
+  if(inTrash){
+    arr.splice(idx,1);
+    setMenu(menu);
+    renderItems();
+    toast('🗑️ "' + nom + '" supprimé de la carte');
+    return;
+  }
+  const catBtn = under && under.closest('#cats button[data-cat]');
+  if(catBtn && catBtn.dataset.cat !== fromCat){
+    const toCat = catBtn.dataset.cat;
+    const [item] = arr.splice(idx,1);
+    if(!menu[fromMode][toCat]) menu[fromMode][toCat] = [];
+    menu[fromMode][toCat].push(item);
+    setMenu(menu);
+    state.currentCat = toCat;
+    renderCats(); renderItems();
+    toast('➡️ "' + nom + '" déplacé dans "' + toCat + '"');
+    return;
+  }
+  const tile = under && under.closest('.item-btn:not(.add-tile)');
+  if(tile && tile.dataset.nom && !(tile.dataset.nom === nom && tile.dataset.prix === prix && parseInt(tile.dataset.idx) === idx)){
+    const r = tile.getBoundingClientRect();
+    const before = x < r.left + r.width/2;
+    const [item] = arr.splice(idx,1);
+    let j = arr.findIndex(([n,p]) => n === tile.dataset.nom && String(p) === tile.dataset.prix);
+    if(j < 0) j = arr.length;
+    arr.splice(before ? j : j+1, 0, item);
+    setMenu(menu);
+    renderItems();
+  }
+}
+function dpClean(){
+  dragPlat.active = false;
+  if(dragPlat.ghost){ dragPlat.ghost.remove(); dragPlat.ghost = null; }
+  if(dragPlat.source){ dragPlat.source.classList.remove('drag-source'); dragPlat.source = null; }
+  document.querySelectorAll('.drag-over-cat,.drag-insert-before,.drag-insert-after').forEach(e=>e.classList.remove('drag-over-cat','drag-insert-before','drag-insert-after'));
+  document.getElementById('dragTrash').classList.remove('visible','active');
+}
+function initDragPlats(){
+  document.addEventListener('touchstart', function(e){
+    if(dragPlat.active) return;
+    const tile = e.target.closest('#itemsGrid .item-btn:not(.add-tile)');
+    if(tile && !e.target.closest('.tile-perso')){
+      const t = e.touches[0]; dragPlat.startX = t.clientX; dragPlat.startY = t.clientY;
+      tile.classList.add('pressing');
+      dragPlat.timer = setTimeout(()=>{ tile.classList.remove('pressing'); dpStart(tile); }, 480);
+    }
+  }, {passive:true});
+  document.addEventListener('touchmove', function(e){
+    if(!dragPlat.active){
+      if(dragPlat.timer){
+        const t = e.touches[0];
+        if(Math.abs(t.clientX-dragPlat.startX)>9 || Math.abs(t.clientY-dragPlat.startY)>9){ clearTimeout(dragPlat.timer); dragPlat.timer=null; document.querySelectorAll('.item-btn.pressing').forEach(el=>el.classList.remove('pressing')); }
+      }
+      return;
+    }
+    e.preventDefault();
+    dpMove(e.touches[0].clientX, e.touches[0].clientY);
+  }, {passive:false});
+  document.addEventListener('touchend', function(e){
+    clearTimeout(dragPlat.timer); dragPlat.timer = null;
+    document.querySelectorAll('.item-btn.pressing').forEach(el=>el.classList.remove('pressing'));
+    if(!dragPlat.active) return;
+    e.preventDefault();
+    dragPlat.didDrag = true;
+    dpEnd(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+    // si le relâché a eu lieu loin du point de départ, aucun "click" ne suit (cible différente) :
+    // on force la remise à zéro un peu plus tard pour ne pas bloquer le prochain vrai clic.
+    setTimeout(()=>{ dragPlat.didDrag = false; }, 0);
+  }, {passive:false});
+
+  document.addEventListener('mousedown', function(e){
+    if(dragPlat.active || e.button !== 0) return;
+    const tile = e.target.closest('#itemsGrid .item-btn:not(.add-tile)');
+    if(tile && !e.target.closest('.tile-perso')){
+      dragPlat.startX = e.clientX; dragPlat.startY = e.clientY;
+      tile.classList.add('pressing');
+      dragPlat.timer = setTimeout(()=>{ tile.classList.remove('pressing'); dpStart(tile); }, 480);
+    }
+  });
+  document.addEventListener('mousemove', function(e){
+    if(!dragPlat.active){
+      if(dragPlat.timer && (Math.abs(e.clientX-dragPlat.startX)>9 || Math.abs(e.clientY-dragPlat.startY)>9)){ clearTimeout(dragPlat.timer); dragPlat.timer=null; document.querySelectorAll('.item-btn.pressing').forEach(el=>el.classList.remove('pressing')); }
+      return;
+    }
+    dpMove(e.clientX, e.clientY);
+  });
+  document.addEventListener('mouseup', function(e){
+    clearTimeout(dragPlat.timer); dragPlat.timer = null;
+    document.querySelectorAll('.item-btn.pressing').forEach(el=>el.classList.remove('pressing'));
+    if(!dragPlat.active) return;
+    dragPlat.didDrag = true;
+    dpEnd(e.clientX, e.clientY);
+    // idem souris : si mousedown/mouseup n'ont pas la même cible (déplacement réel), aucun
+    // "click" n'est émis par le navigateur — on remet le drapeau à zéro nous-mêmes.
+    setTimeout(()=>{ dragPlat.didDrag = false; }, 0);
+  });
+
+  document.addEventListener('click', function(e){
+    if(dragPlat.didDrag){ e.stopPropagation(); e.preventDefault(); dragPlat.didDrag = false; }
+  }, true);
+}
+
+function ouvrirAjoutPlat(){
+  document.getElementById('apNom').value = '';
+  document.getElementById('apPrix').value = '';
+  document.getElementById('apDesc').value = '';
+  document.getElementById('apLibre').checked = false;
+  document.getElementById('apPrixField').style.display = 'block';
+  const sel = document.getElementById('apCat');
+  const cats = Object.keys(getMenu()[state.mode]);
+  sel.innerHTML = cats.map(c=>`<option value="${c}"${c===state.currentCat?' selected':''}>${c}</option>`).join('');
+  document.getElementById('addPlatOverlay').classList.add('show');
+  document.getElementById('apNom').focus();
+}
+document.getElementById('apLibre').addEventListener('change', (e)=>{
+  document.getElementById('apPrixField').style.display = e.target.checked ? 'none' : 'block';
+});
+document.getElementById('apCancel').onclick = ()=> document.getElementById('addPlatOverlay').classList.remove('show');
+document.getElementById('apConfirm').onclick = ()=>{
+  const nom = document.getElementById('apNom').value.trim();
+  const cat = document.getElementById('apCat').value;
+  const libre = document.getElementById('apLibre').checked;
+  const desc = document.getElementById('apDesc').value.trim();
+  if(!nom){ toast('Donne un nom au plat'); return; }
+  if(!cat){ toast('Choisis une catégorie'); return; }
+  let prix;
+  if(libre){ prix = 'libre'; }
+  else {
+    prix = parseFloat((document.getElementById('apPrix').value || '').replace(',', '.'));
+    if(!prix || isNaN(prix) || prix <= 0){ toast('Prix invalide'); return; }
+  }
+  const menu = getMenu();
+  if(!menu[state.mode][cat]) menu[state.mode][cat] = [];
+  menu[state.mode][cat].push(desc ? [nom, prix, desc] : [nom, prix]);
+  setMenu(menu);
+  document.getElementById('addPlatOverlay').classList.remove('show');
+  state.currentCat = cat;
+  renderCats(); renderItems();
+  toast('✅ "' + nom + '" ajouté à la carte');
+};
 
 /* ===================== PANIER ===================== */
 function newLigne(nom, prix){
-  return {id: nextLineId++, nom, prix, supps: [], notes: [], cuisson: null};
+  return {id: nextLineId++, nom, prix, supps: [], notes: [], cuisson: null, qty: 1};
+}
+// Deux lignes sont "fusionnables" (même article, strictement identique) si même nom, même prix,
+// mêmes suppléments, mêmes remarques et même cuisson — sinon elles restent des lignes distinctes
+// (ex : une Margherita simple et une Margherita "sans mozza" ne doivent jamais être regroupées).
+function lignesEquivalentes(a, b){
+  if(!a || !b) return false;
+  if(a.nom !== b.nom || a.prix !== b.prix || (a.cuisson||null) !== (b.cuisson||null)) return false;
+  const sA = (a.supps||[]).map(s=>s.nom+'|'+s.prix).sort();
+  const sB = (b.supps||[]).map(s=>s.nom+'|'+s.prix).sort();
+  if(sA.length !== sB.length || sA.some((v,i)=>v!==sB[i])) return false;
+  const nA = [...(a.notes||[])].sort();
+  const nB = [...(b.notes||[])].sort();
+  if(nA.length !== nB.length || nA.some((v,i)=>v!==nB[i])) return false;
+  return true;
+}
+function trouverLigneFusion(candidat){
+  return state.cart.find(l => lignesEquivalentes(l, candidat));
 }
 // Retrouve la description (liste d'ingrédients) d'un article à partir de son nom, en cherchant
 // dans les deux modes du menu (sur place / à emporter). Seules les pizzas/calzones/focacce ont une
@@ -1162,16 +1425,22 @@ function getIngredientsArticle(nom){
 function addItem(nom, prix){
   if(prix === 'libre'){
     askNumber('Prix du ' + nom, 'ex: 14.50', (val)=>{
-      const line = newLigne(nom, val);
-      state.cart.push(line);
-      state.selectedLine = line.id;
+      const existing = trouverLigneFusion({nom, prix: val, supps:[], notes:[], cuisson:null});
+      if(existing){ existing.qty = (existing.qty||1) + 1; state.selectedLine = existing.id; }
+      else { const line = newLigne(nom, val); state.cart.push(line); state.selectedLine = line.id; }
       renderCart(); save();
     });
     return;
   }
-  const line = newLigne(nom, prix);
-  state.cart.push(line);
-  state.selectedLine = line.id;
+  const existing = trouverLigneFusion({nom, prix, supps:[], notes:[], cuisson:null});
+  if(existing){
+    existing.qty = (existing.qty||1) + 1;
+    state.selectedLine = existing.id;
+  } else {
+    const line = newLigne(nom, prix);
+    state.cart.push(line);
+    state.selectedLine = line.id;
+  }
   renderCart(); save();
 }
 
@@ -1183,22 +1452,36 @@ function renderCart(){
   }
   state.cart.forEach(line=>{
     if(!line.notes) line.notes = [];
+    if(!line.qty) line.qty = 1;
     const div = document.createElement('div');
     div.className = 'cart-line' + (line.id === state.selectedLine ? ' selected' : '');
-    const lineTotal = line.prix + line.supps.reduce((s,x)=>s+x.prix,0);
+    const unitTotal = line.prix + line.supps.reduce((s,x)=>s+x.prix,0);
+    const lineTotal = unitTotal * line.qty;
     const cuissonChips = `<div class="line-chips" data-line-chips="${line.id}">
       <button class="line-chip${line.cuisson==='bien'?' actif':''}" data-chip="bien">Bien cuite</button>
       <button class="line-chip${line.cuisson==='pastrop'?' actif':''}" data-chip="pastrop">Pas trop cuite</button>
     </div>`;
+    const qtyRow = `<div class="qty-row">
+      <button class="qbtn" data-qty-dec="${line.id}">−</button>
+      <span class="qn">${line.qty}</span>
+      <button class="qbtn" data-qty-inc="${line.id}">+</button>
+      ${line.qty>1?`<span class="qty-unit">(${fmt(unitTotal)} / pièce)</span>`:''}
+    </div>`;
     div.innerHTML = `<div class="row1"><span>${line.nom}</span><span>${fmt(lineTotal)} <button class="perso" data-perso-line="${line.id}">⋯</button><span class="del" data-del-line="${line.id}">✕</span></span></div>` +
       line.supps.map((s,i)=>`<div class="sup"><span>+ ${s.nom}</span><span>${fmt(s.prix)} <span class="del" data-del-supp="${line.id}:${i}">✕</span></span></div>`).join('') +
       line.notes.map((n,i)=>`<div class="sup"><span>– ${n}</span><span><span class="del" data-del-note="${line.id}:${i}">✕</span></span></div>`).join('') +
-      cuissonChips;
+      cuissonChips + qtyRow;
     div.onclick = (e)=>{
-      if(e.target.closest('[data-del-line]') || e.target.closest('[data-del-supp]') || e.target.closest('[data-del-note]') || e.target.closest('[data-perso-line]') || e.target.closest('[data-chip]')) return;
+      if(e.target.closest('[data-del-line]') || e.target.closest('[data-del-supp]') || e.target.closest('[data-del-note]') || e.target.closest('[data-perso-line]') || e.target.closest('[data-chip]') || e.target.closest('[data-qty-dec]') || e.target.closest('[data-qty-inc]')) return;
       state.selectedLine = line.id; renderCart();
     };
     wrap.appendChild(div);
+  });
+  wrap.querySelectorAll('[data-qty-dec]').forEach(el=>{
+    el.onclick = (e)=>{ e.stopPropagation(); changerQty(parseInt(el.dataset.qtyDec), -1); };
+  });
+  wrap.querySelectorAll('[data-qty-inc]').forEach(el=>{
+    el.onclick = (e)=>{ e.stopPropagation(); changerQty(parseInt(el.dataset.qtyInc), 1); };
   });
   wrap.querySelectorAll('[data-chip]').forEach(el=>{
     el.onclick = (e)=>{ e.stopPropagation();
@@ -1244,6 +1527,16 @@ function renderCart(){
   updatePaiementChips();
   updateChablBanner();
 }
+function changerQty(lineId, delta){
+  const line = state.cart.find(l=>l.id===lineId);
+  if(!line) return;
+  line.qty = (line.qty||1) + delta;
+  if(line.qty <= 0){
+    state.cart = state.cart.filter(l=>l.id !== lineId);
+    if(state.selectedLine === lineId) state.selectedLine = null;
+  }
+  renderCart(); save();
+}
 
 // Met à jour l'affichage (actif/inactif) des deux puces de paiement du panier selon state.modePaiement
 function updatePaiementChips(){
@@ -1274,12 +1567,22 @@ function persoLigneActuelle(){
 function ouvrirPersoEdit(lineId){
   persoDraftMode = false;
   persoDraftLine = null;
+  // si la ligne regroupe plusieurs exemplaires (qty > 1), on détache 1 exemplaire dans une
+  // nouvelle ligne pour le personnaliser isolément, sans toucher aux autres exemplaires groupés
+  const line = state.cart.find(l=>l.id === lineId);
+  if(line && (line.qty||1) > 1){
+    line.qty = (line.qty||1) - 1;
+    const unite = {...line, id: nextLineId++, qty: 1, supps: line.supps.map(s=>({...s})), notes: [...line.notes]};
+    state.cart.push(unite);
+    lineId = unite.id;
+    save();
+  }
   state.selectedLine = lineId;
   renderPerso(true);
 }
 function ouvrirPersoDraft(nom, prix){
   persoDraftMode = true;
-  persoDraftLine = {nom, prix, supps: [], notes: [], cuisson: null};
+  persoDraftLine = {nom, prix, supps: [], notes: [], cuisson: null, qty: 1};
   renderPerso(true);
 }
 // ouvertureInitiale = true seulement au tout premier affichage de la fenêtre : évite que
@@ -1383,9 +1686,15 @@ document.getElementById('persoClose').onclick = ()=>{
 };
 document.getElementById('persoValider').onclick = ()=>{
   if(!persoDraftMode || !persoDraftLine) return;
-  const line = {...persoDraftLine, id: nextLineId++};
-  state.cart.push(line);
-  state.selectedLine = line.id;
+  const existing = trouverLigneFusion(persoDraftLine);
+  if(existing){
+    existing.qty = (existing.qty||1) + 1;
+    state.selectedLine = existing.id;
+  } else {
+    const line = {...persoDraftLine, id: nextLineId++, qty: persoDraftLine.qty||1};
+    state.cart.push(line);
+    state.selectedLine = line.id;
+  }
   persoDraftMode = false;
   persoDraftLine = null;
   renderCart(); save();
@@ -1429,11 +1738,11 @@ function renderDivArticle(){
   const list = document.getElementById('divArticleList');
   list.innerHTML = '';
   state.cart.forEach(l=>{
-    const total = l.prix + l.supps.reduce((s,x)=>s+x.prix,0);
+    const total = (l.prix + l.supps.reduce((s,x)=>s+x.prix,0)) * (l.qty||1);
     const n = divAssign[l.id] || 0;
     const row = document.createElement('div');
     row.className = 'table-pick';
-    row.innerHTML = `<span>${l.nom} — ${fmt(total)}</span><span class="tpstatut" style="color:${n?'var(--rouge)':'var(--gris)'}">${n ? 'Personne '+n : 'Non assigné'}</span>`;
+    row.innerHTML = `<span>${(l.qty||1)>1?(l.qty+'× '):''}${l.nom} — ${fmt(total)}</span><span class="tpstatut" style="color:${n?'var(--rouge)':'var(--gris)'}">${n ? 'Personne '+n : 'Non assigné'}</span>`;
     row.onclick = ()=>{
       const max = Math.max(2, divN);
       divAssign[l.id] = n >= max ? 0 : n+1;
@@ -1443,7 +1752,7 @@ function renderDivArticle(){
   });
   const totals = {};
   state.cart.forEach(l=>{
-    const total = l.prix + l.supps.reduce((s,x)=>s+x.prix,0);
+    const total = (l.prix + l.supps.reduce((s,x)=>s+x.prix,0)) * (l.qty||1);
     const n = divAssign[l.id] || 0;
     totals[n] = (totals[n]||0) + total;
   });
@@ -1457,7 +1766,7 @@ function renderDivArticle(){
 
 function cartTotal(cart){
   let ttc = 0;
-  (cart||state.cart).forEach(l=>{ ttc += l.prix + l.supps.reduce((s,x)=>s+x.prix,0); });
+  (cart||state.cart).forEach(l=>{ ttc += (l.prix + l.supps.reduce((s,x)=>s+x.prix,0)) * (l.qty||1); });
   const ht = ttc / 1.10;
   return { ht, tva: ttc-ht, ttc };
 }
@@ -1543,10 +1852,11 @@ document.getElementById('btnValider').onclick = ()=>{
 function enregistrerVentesPourLignes(lignes){
   const v = getVentes();
   (lignes||[]).forEach(line=>{
+    const qte = line.qty||1;
     if(estUnePizza(line.nom) || line.nom === 'Plat du jour'){
-      v.pizzas[line.nom] = (v.pizzas[line.nom]||0) + 1;
+      v.pizzas[line.nom] = (v.pizzas[line.nom]||0) + qte;
     }
-    (line.supps||[]).forEach(s=>{ v.supplements[s.nom] = (v.supplements[s.nom]||0) + 1; });
+    (line.supps||[]).forEach(s=>{ v.supplements[s.nom] = (v.supplements[s.nom]||0) + qte; });
   });
   saveVentes(v);
 }
@@ -1564,7 +1874,8 @@ function ouvrirDetailCommande(id, data){
     (data.envoyePar === 'serveur' ? '📱 Envoyée par un serveur' : '🖥️ Envoyée depuis la caisse') +
     (data.statut === 'en_traitement' ? ' · en cours de traitement' : '') + retraitTxt + couperTxt + chablTxt;
   const lignesHtml = (data.lignes||[]).map(l=>{
-    let t = `<div style="display:flex; justify-content:space-between; padding:3px 0; font-weight:600;"><span>${l.nom}</span><span>${fmt(l.prix + (l.supps||[]).reduce((s,x)=>s+x.prix,0))}</span></div>`;
+    const qte = l.qty||1;
+    let t = `<div style="display:flex; justify-content:space-between; padding:3px 0; font-weight:600;"><span>${qte>1?(qte+'× '):''}${l.nom}</span><span>${fmt((l.prix + (l.supps||[]).reduce((s,x)=>s+x.prix,0)) * qte)}</span></div>`;
     (l.supps||[]).forEach(s=> t += `<div style="padding-left:12px; color:var(--gris); font-size:12px;">+ ${s.nom}</div>`);
     (l.notes||[]).forEach(n=> t += `<div style="padding-left:12px; color:var(--gris); font-size:12px;">– ${n}</div>`);
     return t;
@@ -1676,8 +1987,8 @@ if(fbOk && fbDb){
         if(!filtered.length){ list.innerHTML = '<div class="classement-empty">Aucune commande en attente.</div>'; return; }
         list.innerHTML = '';
         filtered.forEach(({id,data})=>{
-          const total = (data.lignes||[]).reduce((s,l)=> s + l.prix + (l.supps||[]).reduce((ss,x)=>ss+x.prix,0), 0);
-          const resume = (data.lignes||[]).map(l=>l.nom).join(', ');
+          const total = (data.lignes||[]).reduce((s,l)=> s + (l.prix + (l.supps||[]).reduce((ss,x)=>ss+x.prix,0)) * (l.qty||1), 0);
+          const resume = (data.lignes||[]).map(l=>(l.qty||1)>1?(l.qty+'× '+l.nom):l.nom).join(', ');
           const tableLbl = data.table ? ` — Table ${data.table.num}` : '';
           const retraitLbl = data.heureRetrait ? ` 🕐 Retrait ${data.heureRetrait}` : '';
           const paieLbl = data.modePaiement === 'carte' ? ' 💳' : (data.modePaiement === 'espece' ? ' 💶' : '');
@@ -1925,7 +2236,7 @@ function renderHistorique(){
 function afficherHistCommandes(docs){
   docs.sort((a,b)=> (b.data.creeLe?.seconds||0) - (a.data.creeLe?.seconds||0));
   const ca = docs.reduce((s,{data})=> s + cartTotal(data.lignes).ttc, 0);
-  const nbPizzas = docs.reduce((s,{data})=> s + (data.lignes||[]).filter(l=>estUnePizza(l.nom)).length, 0);
+  const nbPizzas = docs.reduce((s,{data})=> s + (data.lignes||[]).filter(l=>estUnePizza(l.nom)).reduce((ss,l)=>ss+(l.qty||1),0), 0);
   document.getElementById('histStats').innerHTML = `
     <div class="hist-stat"><div class="v">${docs.length}</div><div class="l">Commandes</div></div>
     <div class="hist-stat"><div class="v">${fmt(ca)}</div><div class="l">Chiffre d'affaires</div></div>
@@ -1944,7 +2255,7 @@ function afficherHistCommandes(docs){
     const bodyId = 'histday_' + di;
     const rows = items.map(({data})=>{
       const total = cartTotal(data.lignes).ttc;
-      const resume = (data.lignes||[]).map(l=>l.nom).join(', ') || 'Commande vide';
+      const resume = (data.lignes||[]).map(l=>(l.qty||1)>1?(l.qty+'× '+l.nom):l.nom).join(', ') || 'Commande vide';
       const chablLbl = data.chablMode ? ' 🛵' : '';
       const heure = data.creeLe ? data.creeLe.toDate().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
       return `<div class="hist-order"><span>${heure} — ${resume}${chablLbl}</span><span>${fmt(total)}</span></div>`;
@@ -1991,13 +2302,14 @@ function afficherRecapChabl(docs, moisStr){
   const supps = {};
   docs.forEach(({data})=>{
     (data.lignes||[]).forEach(l=>{
+      const qte = l.qty||1;
       if(!articles[l.nom]) articles[l.nom] = {qte:0, total:0};
-      articles[l.nom].qte += 1;
-      articles[l.nom].total += l.prix;
+      articles[l.nom].qte += qte;
+      articles[l.nom].total += l.prix * qte;
       (l.supps||[]).forEach(s=>{
         if(!supps[s.nom]) supps[s.nom] = {qte:0, total:0};
-        supps[s.nom].qte += 1;
-        supps[s.nom].total += s.prix;
+        supps[s.nom].qte += qte;
+        supps[s.nom].total += s.prix * qte;
       });
     });
   });
@@ -2063,8 +2375,10 @@ ${new Date().toLocaleString('fr-FR')}
 function buildLignesText(cart){
   let lignes = '';
   (cart||[]).forEach(l=>{
-    lignes += `${l.nom} .......... ${fmt(l.prix)}\n`;
-    (l.supps||[]).forEach(s=> lignes += `  + ${s.nom} .......... ${fmt(s.prix)}\n`);
+    const qte = l.qty||1;
+    const prefix = qte>1 ? `${qte}x ` : '';
+    lignes += `${prefix}${l.nom} .......... ${fmt(l.prix * qte)}\n`;
+    (l.supps||[]).forEach(s=> lignes += `  + ${s.nom}${qte>1?' (x'+qte+')':''} .......... ${fmt(s.prix * qte)}\n`);
     (l.notes||[]).forEach(n=> lignes += `  - ${n}\n`);
     const badges = [l.cuisson==='bien'?'bien cuite':'', l.cuisson==='pastrop'?'pas trop cuite':''].filter(Boolean).join(', ');
     if(badges) lignes += `  (${badges})\n`;
@@ -2642,6 +2956,7 @@ updateSalleToolbarVisibility();
 renderAdmSupp();
 renderAdmMenu();
 renderAdmImprimantes();
+initDragPlats();
 
 if('serviceWorker' in navigator){
   window.addEventListener('load', ()=>{
