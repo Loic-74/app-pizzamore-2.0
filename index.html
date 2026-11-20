@@ -1845,7 +1845,7 @@ document.getElementById('btnValider').onclick = ()=>{
     });
   }
   if(nouvellesLignes.length){
-    imprimerCommandeCuisine({mode: state.mode, lignes: nouvellesLignes, table: state.table, heureRetrait: state.heureRetrait, couperCommande: state.couperCommande});
+    imprimerCommandeCuisine({mode: state.mode, lignes: nouvellesLignes, table: state.table, heureRetrait: state.heureRetrait, couperCommande: state.couperCommande, chablMode: !!state.chablMode, chablNum: state.chablMode ? (state.chablNum || null) : null});
   } else {
     toast('Aucun nouvel article à envoyer en cuisine');
   }
