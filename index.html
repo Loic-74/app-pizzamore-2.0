@@ -1659,7 +1659,9 @@ function renderPerso(ouvertureInitiale){
   ov.classList.add('show');
   if(ouvertureInitiale){
     document.getElementById('persoNoteInput').value = '';
-    document.getElementById('persoNoteInput').focus();
+    // pas de .focus() ici : ça ouvrait le clavier automatiquement à l'ouverture de la fenêtre,
+    // ce qui décale toute la mise en page sur tablette. Le clavier ne doit s'ouvrir que si
+    // l'utilisateur touche lui-même le champ pour écrire un commentaire.
   }
 }
 function ajouterNotePerso(){
